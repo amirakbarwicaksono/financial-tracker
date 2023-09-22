@@ -1,0 +1,49 @@
+type Transaction {
+    id: ID!
+    item: String!
+    category: Category!
+    isIncome: Boolean!
+    date: String!
+    amount: Float!
+}
+
+type Category {
+    id: ID!
+    name: String!
+    transactions(range: RangeInput): [Transaction]
+    total(range: RangeInput): Float
+}
+
+type Query {
+    Transactions(range: RangeInput): [Transaction]
+    Transaction(id: ID!): Transaction
+    Categories: [Category]
+    Category(id: ID!): Category
+}
+
+type Mutation {
+    createTransaction(input: TransactionInput!): Transaction
+    updateTransaction(id: ID!, input: UpdateTransactionInput!): Transaction
+    deleteTransaction(id: ID!): Boolean
+}
+
+input RangeInput {
+    startDate: String!
+    endDate: String!
+}
+
+input TransactionInput {
+    item: String!
+    categoryID: ID!
+    isIncome: Boolean!
+    date: String!
+    amount: Float!
+}
+
+input UpdateTransactionInput {
+    item: String
+    categoryID: ID
+    isIncome: Boolean
+    date: String
+    amount: Float
+}
