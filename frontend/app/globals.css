@@ -3,5 +3,9 @@
 @tailwind utilities;
 
 body {
-    @apply bg-purple-950 text-white;
+    @apply bg-purple-950 text-white overflow-x-hidden;
+}
+
+.bubble {
+    @apply bg-white bg-opacity-5 rounded-lg text-neutral-200;
 }
