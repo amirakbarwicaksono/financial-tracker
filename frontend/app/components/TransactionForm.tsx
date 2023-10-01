@@ -3,7 +3,7 @@ import Input from "./Input";
 
 const TransactionForm = () => {
     return (
-        <div className="bubble col-span-2 row-span-3">
+        <div className="bubble col-span-2 row-span-3 overflow-auto">
             <form
                 action=""
                 className="flex flex-col h-full"

@@ -1,7 +1,7 @@
+import BarGraph from "./components/BarGraph";
 import Calendar from "./components/Calendar";
-import CategoryPieChart from "./components/CategoryPieChart";
-import Graph from "./components/Graph";
 import Navbar from "./components/Navbar";
+import PieGraph from "./components/PieGraph";
 import Sidebar from "./components/Sidebar";
 import TransactionForm from "./components/TransactionForm";
 import Transactions from "./components/Transactions";
@@ -16,8 +16,8 @@ export default function Home() {
                     <TransactionForm />
                     <Transactions />
                     <Calendar />
-                    <Graph />
-                    <CategoryPieChart />
+                    <BarGraph />
+                    <PieGraph />
                 </div>
             </div>
         </div>

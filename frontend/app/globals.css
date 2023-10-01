@@ -11,7 +11,7 @@
 }
 
 body {
-    @apply bg-purple-950 text-white overflow-x-hidden;
+    @apply bg-purple-950  overflow-x-hidden;
 }
 
 .border-thin {
@@ -34,6 +34,10 @@ th {
 th:first-child,
 td:first-child {
     @apply border-l;
+}
+
+td button {
+    @apply hover:scale-125 transition;
 }
 
 tbody tr {
