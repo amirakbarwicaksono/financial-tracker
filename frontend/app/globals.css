@@ -43,3 +43,11 @@ td button {
 tbody tr {
     @apply even:bg-white even:bg-opacity-5 font-extralight;
 }
+
+.tooltip {
+    @apply bg-neutral-950 p-2 rounded-lg text-inherit border;
+}
+
+/* .recharts-legend-item {
+    @apply text-sm;
+} */
