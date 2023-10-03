@@ -84,7 +84,6 @@ const PieGraph = () => {
             <PieChart>
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
-                    width={250}
                     layout="horizontal"
                     align="left"
                     verticalAlign="middle"
@@ -95,8 +94,8 @@ const PieGraph = () => {
                     data={data}
                     cx={"50%"}
                     cy={"50%"}
-                    innerRadius={80}
-                    outerRadius={100}
+                    innerRadius={"60%"}
+                    outerRadius={"80%"}
                     fill="#888a2s"
                     paddingAngle={0}
                     dataKey="value"

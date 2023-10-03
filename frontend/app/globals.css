@@ -36,10 +36,6 @@ td:first-child {
     @apply border-l;
 }
 
-td button {
-    @apply hover:scale-125 transition;
-}
-
 tbody tr {
     @apply even:bg-white even:bg-opacity-5 font-extralight;
 }
@@ -48,6 +44,10 @@ tbody tr {
     @apply bg-neutral-950 p-2 rounded-lg text-inherit border;
 }
 
-/* .recharts-legend-item {
-    @apply text-sm;
-} */
+.recharts-legend-item {
+    @apply text-sm 2xl:text-3xl;
+}
+
+.recharts-legend-wrapper {
+    @apply !w-1/2 !overflow-auto !max-h-full;
+}
