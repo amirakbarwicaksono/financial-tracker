@@ -10,7 +10,7 @@ export default function Home() {
     return (
         <div className="flex">
             <Sidebar />
-            <div className="w-full flex flex-col p-4 h-screen ">
+            <div className="w-full flex flex-col p-2 h-screen ">
                 <Navbar />
                 <div className="flex-grow grid grid-cols-12 grid-rows-6 gap-2 overflow-hidden">
                     <div className="bubble  col-span-5 row-span-3 ">

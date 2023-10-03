@@ -3,7 +3,7 @@ const Input = ({ placeholder }: { placeholder?: string }) => {
         <input
             type="text"
             placeholder={placeholder}
-            className="w-full mb-2 bubble outline-none border-thin min-w-[100px]"
+            className="w-full  bubble outline-none border-thin min-w-[100px]"
         />
     );
 };

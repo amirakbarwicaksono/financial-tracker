@@ -5,7 +5,7 @@ const TransactionForm = () => {
     return (
         <form
             action=""
-            className="flex flex-col h-full"
+            className="flex flex-col h-full gap-2"
         >
             <Input placeholder="item"></Input>
             <Input placeholder="amount"></Input>
