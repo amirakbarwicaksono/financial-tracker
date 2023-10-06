@@ -4,20 +4,27 @@ import IconButton from "./IconButton";
 
 const Transactions = () => {
     const data = [
+        { id: 0, date: "22-09-2023", item: "milk chocalate", category: "grocery", amount: 50 },
+        { id: 1, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 2, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
         { id: 0, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
         { id: 1, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
         { id: 2, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 3, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 4, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 5, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 6, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 7, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 8, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 9, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
-        { id: 10, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 0, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 1, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 2, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 0, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 1, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 2, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 0, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 1, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 2, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 0, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 1, date: "22-09-2023", item: "milk", category: "grocery", amount: 50 },
+        { id: 2, date: "22-09-2023", item: "milk", category: "Miscellaneous", amount: 50 },
     ];
     return (
-        <div className="overflow-auto pr-2 max-h-full">
+        <div className="overflow-auto pr-2 h-full min-w-[600px]">
             <table className="w-full capitalize text-center border-separate border-spacing-0 ">
                 <thead className="bg-purple-950 sticky top-0">
                     <tr>
