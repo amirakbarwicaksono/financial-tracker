@@ -1,8 +1,11 @@
 "use client";
 
+import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { dimmedColor } from "../utils/dimmedColor";
+
+import query from "../graphql/getTransactions.graphql";
 
 type DataPoint = {
     month: string;
@@ -31,26 +34,34 @@ const BarGraph = () => {
     const [activeIndex, setActiveIndex] = useState(-1);
     const [hoverIndex, setHoverIndex] = useState(-1);
 
-    const data = [
-        { month: "JAN", amount: 5430 },
-        { month: "FEB", amount: 6050 },
-        { month: "MAR", amount: 5150 },
-        { month: "APR", amount: 7165 },
-        { month: "MAY", amount: 6330 },
-        { month: "JUN", amount: 8127 },
-        { month: "JUL", amount: 5430 },
-        { month: "AUG", amount: 6050 },
-        { month: "SEP", amount: 5150 },
-        { month: "OCT", amount: 7165 },
-        { month: "NOV", amount: 6330 },
-        { month: "DEC", amount: 8127 },
-    ];
+    const {
+        data: { Transactions: data },
+    } = useSuspenseQuery<any>(query);
+
+    // Step 1: Parse the input data
+    const parsedData = data.map(({ date, amount }: { date: string; amount: number }) => ({
+        month: new Date(date).toLocaleString("en-US", { month: "short" }).toUpperCase(),
+        amount,
+    }));
+
+    // Step 2: Group the data by month
+    const groupedData = parsedData.reduce((acc: { [x: string]: any }, entry: { month: any; amount: any }) => {
+        const { month, amount } = entry;
+        acc[month] = (acc[month] || 0) + amount;
+        return acc;
+    }, {});
+
+    // Step 3: Transform the grouped data into the desired format
+    const resultData = Object.keys(groupedData)
+        .map((month) => ({ month, amount: groupedData[month] }))
+        .sort((a, b) => new Date(`2000-${a.month}-01`)!.getTime() - new Date(`2000-${b.month}-01`)!.getTime());
+
     return (
         <ResponsiveContainer
             width="100%"
             height="100%"
         >
-            <BarChart data={data}>
+            <BarChart data={resultData}>
                 <XAxis
                     dataKey="month"
                     stroke="currentColor"
@@ -66,7 +77,7 @@ const BarGraph = () => {
                     onClick={(_, index) => (activeIndex === index ? setActiveIndex(-1) : setActiveIndex(index))}
                     dataKey="amount"
                 >
-                    {data.map((_, index) => (
+                    {resultData.map((_, index) => (
                         <Cell
                             className="hover:stroke-neutral-200 stroke-none cursor-pointer"
                             style={{

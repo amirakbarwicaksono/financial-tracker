@@ -56,8 +56,8 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Tr
 	}
 
 	newTransaction := &model.Transaction{
-		Item:       input.Item,
-		Category:   category,
+		Item: input.Item,
+		// Category:   category,
 		CategoryID: input.CategoryID,
 		IsIncome:   input.IsIncome,
 		Date:       input.Date,

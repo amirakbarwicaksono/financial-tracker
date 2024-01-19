@@ -1,0 +1,12 @@
+query {
+    Transactions {
+        id
+        item
+        category {
+            id
+            name
+        }
+        date
+        amount
+    }
+}

@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
+import { useEffect, useState } from "react";
 import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import query from "../graphql/getCategories.graphql";
 import { dimmedColor } from "../utils/dimmedColor";
 
 type DataPoint = {
@@ -31,24 +35,26 @@ const PieGraph = () => {
     const [activeIndex, setActiveIndex] = useState(-1);
     // const [hoverIndex, setHoverIndex] = useState(-1);
 
-    const data = [
-        { name: "Grocery", value: 5343 },
-        { name: "Education", value: 100 },
-        { name: "Health", value: 2324 },
-        { name: "Miscellaneous", value: 1412 },
-        { name: "Food", value: 100 },
-        { name: "Transportation", value: 1200 },
-        { name: "Personal", value: 265 },
-        { name: "Entertainment", value: 200 },
-        { name: "Tax", value: 1000 },
-        { name: "Utility", value: 2254 },
-        { name: "Rent", value: 20 },
-        { name: "Debt", value: 10 },
-        { name: "Gift", value: 200 },
-        { name: "Insurance", value: 500 },
-        { name: "Electronics", value: 200 },
-        { name: "Repair", value: 700 },
-    ];
+    const {
+        data: { Categories: data },
+    } = useSuspenseQuery<any>(query);
+
+    const transformedData = data.map(({ name, total }: { name: string; total: number }) => {
+        return { name, value: total };
+    });
+
+    const [total, setTotal] = useState(0);
+
+    useEffect(() => {
+        // Use reduce to calculate the total when the data array changes
+        const calculatedTotal = data.reduce((acc: any, item: { total: any }) => {
+            return acc + item.total;
+        }, 0);
+
+        // Update the total state
+        setTotal(calculatedTotal);
+    }, [data]); // Trigger the effect when the data array changes
+
     const COLORS = [
         "#e6194B",
         "#f58231",
@@ -91,7 +97,7 @@ const PieGraph = () => {
                 />
                 <Pie
                     minAngle={10}
-                    data={data}
+                    data={transformedData}
                     cx={"50%"}
                     cy={"50%"}
                     innerRadius={"65%"}
@@ -101,7 +107,7 @@ const PieGraph = () => {
                     dataKey="value"
                     onClick={(_, index) => (activeIndex === index ? setActiveIndex(-1) : setActiveIndex(index))}
                 >
-                    {data.map((_, index) => (
+                    {transformedData.map((_: any, index: number) => (
                         <Cell
                             className={`hover:stroke-neutral-200 stroke-none  outline-none cursor-pointer`}
                             style={{
@@ -114,7 +120,7 @@ const PieGraph = () => {
 
                     <Label
                         fill="#e5e5e5"
-                        value="100112"
+                        value={total}
                         position="center"
                     />
                 </Pie>
