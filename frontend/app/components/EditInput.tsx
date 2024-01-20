@@ -16,7 +16,7 @@ const EditInput: React.FC<EditInputProps> = ({ label, type, value, onChange }) =
                 type={type}
                 value={value}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-                className="border rounded-md px-3 py-2 w-full text-gray-600 focus:outline-purple-700"
+                className="capitalize border rounded-md px-3 py-2 w-full text-gray-600 focus:outline-purple-700"
             />
         </div>
     );

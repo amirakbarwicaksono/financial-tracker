@@ -1,6 +1,10 @@
 // EditPopup.tsx
+import { useSuspenseQuery } from "@apollo/client";
 import React, { useState } from "react";
-import InputField from "./EditInput";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import categoriesQuery from "../graphql/getCategories.graphql";
+import EditInput from "./EditInput";
 
 interface Transaction {
     id: string;
@@ -35,7 +39,9 @@ const EditPopup: React.FC<EditPopupProps> = ({ transaction, onUpdate, onClose })
         categoryID: transaction.category.id,
         date: transaction.date,
     });
-    console.log(transaction);
+    const {
+        data: { Categories: categories },
+    } = useSuspenseQuery<any>(categoriesQuery);
 
     const handleInputChange = (field: keyof EditedItem, value: string | number) => {
         setEditedItem((prevItem) => ({ ...prevItem, [field]: value }));
@@ -51,35 +57,55 @@ const EditPopup: React.FC<EditPopupProps> = ({ transaction, onUpdate, onClose })
             <div className="bg-white p-4 rounded-lg shadow-md w-96">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-700 text-center">Edit Transaction</h2>
 
-                <InputField
-                    label="Date"
-                    type="text"
-                    value={editedItem.date}
-                    onChange={(value) => handleInputChange("date", value)}
-                />
-                <InputField
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600">Date:</label>
+
+                    <DatePicker
+                        selected={new Date(editedItem.date)}
+                        onChange={(date: Date) => handleInputChange("date", date.toISOString())}
+                        dateFormat="yyyy-MM-dd"
+                        className="border hover:cursor-pointer rounded-md p-2 w-full text-gray-600 focus:outline-purple-700"
+                    />
+                </div>
+
+                <EditInput
                     label="Item"
                     type="text"
                     value={editedItem.item}
                     onChange={(value) => handleInputChange("item", value)}
                 />
-                <InputField
-                    label="Category"
-                    type="text"
-                    value={editedItem.categoryID}
-                    onChange={(value) => handleInputChange("categoryID", value)}
-                />
-                <InputField
+
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600">Category:</label>
+
+                    <select
+                        id="categories"
+                        className="hover:cursor-pointer border   rounded-md p-2  w-full text-gray-600 focus:outline-purple-700"
+                        onChange={(e) => handleInputChange("categoryID", e.target.value)}
+                    >
+                        {categories.map((category: any) => (
+                            <option
+                                key={category.id}
+                                value={category.id}
+                                className=" bg-black font-extralight text-neutral-200"
+                                selected={category.id === editedItem.categoryID}
+                            >
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <EditInput
                     label="Amount"
                     type="text"
                     value={editedItem.amount}
                     onChange={(value) => handleInputChange("amount", Number(value))}
                 />
-
                 <div className="flex justify-end">
                     <button
                         onClick={handleUpdate}
-                        className="bg-purple-700 text-white px-4 py-2 rounded-md hover:bg-purple-800"
+                        className="bg-purple-700  text-white px-4 py-2 rounded-md hover:bg-purple-800"
                     >
                         Update
                     </button>

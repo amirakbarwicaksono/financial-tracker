@@ -7,7 +7,7 @@ const Input = ({ placeholder, value, onChange }: InputProps) => {
             placeholder={placeholder}
             value={value}
             onChange={onChange}
-            className="w-full bubble outline-none border-thin min-w-[100px]"
+            className="w-full focus:border-fuchsia-600 bubble outline-none border-thin min-w-[100px]"
         />
     );
 };
