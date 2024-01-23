@@ -30,7 +30,12 @@ const CustomTooltip: React.FC<{
     return null;
 };
 
-const BarGraph = () => {
+interface BarGraphProps {
+    selectedMonth: string | null;
+    setSelectedMonth: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+const BarGraph = ({ selectedMonth, setSelectedMonth }: BarGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
     const [hoverIndex, setHoverIndex] = useState(-1);
 
@@ -74,7 +79,17 @@ const BarGraph = () => {
                 <Bar
                     onMouseOver={(_, index) => setHoverIndex(index)}
                     onMouseOut={(_, index) => setHoverIndex(-1)}
-                    onClick={(_, index) => (activeIndex === index ? setActiveIndex(-1) : setActiveIndex(index))}
+                    onClick={(_, index) => {
+                        const month = resultData[index]?.month;
+                        console.log(month);
+                        if (selectedMonth !== month) {
+                            setSelectedMonth(month);
+                        } else {
+                            setSelectedMonth(null);
+                        }
+                        setActiveIndex(activeIndex === index ? -1 : index);
+                    }}
+                    // onClick={(_, index) => (activeIndex === index ? setActiveIndex(-1) : setActiveIndex(index))}
                     dataKey="amount"
                 >
                     {resultData.map((_, index) => (

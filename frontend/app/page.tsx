@@ -11,6 +11,8 @@ import Transactions from "./components/Transactions";
 
 export default function Home() {
     const [tab, setTab] = useState(1);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
     return (
         <div className="flex flex-col-reverse md:flex-row h-screen">
@@ -28,7 +30,11 @@ export default function Home() {
                         bubble lg:col-span-5 row-span-3 
                         `}
                     >
-                        <PieGraph />
+                        <PieGraph
+                            selectedCategory={selectedCategory}
+                            selectedMonth={selectedMonth}
+                            setSelectedCategory={setSelectedCategory}
+                        />
                     </div>
                     <div
                         className={`
@@ -36,7 +42,10 @@ export default function Home() {
                         bubble lg:col-span-4 row-span-3
                         `}
                     >
-                        <BarGraph />
+                        <BarGraph
+                            selectedMonth={selectedMonth}
+                            setSelectedMonth={setSelectedMonth}
+                        />
                     </div>
                     <div
                         className={`
@@ -62,7 +71,10 @@ export default function Home() {
                         bubble lg:col-span-7 row-span-3 overflow-x-auto overflow-y-hidden
                         `}
                     >
-                        <Transactions />
+                        <Transactions
+                            selectedCategory={selectedCategory}
+                            selectedMonth={selectedMonth}
+                        />
                     </div>
                 </div>
             </div>

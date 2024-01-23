@@ -13,10 +13,15 @@ import transactionsQuery from "../graphql/getTransactions.graphql";
 import IconButton from "./IconButton";
 
 // Transactions.js
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import EditPopup from "./EditPopup";
 
 import updateTransactionMutation from "../graphql/updateTransaction.graphql";
+
+interface TransactionProps {
+    selectedCategory: string | null;
+    selectedMonth: string | null;
+}
 
 interface Transaction {
     id: string;
@@ -37,7 +42,7 @@ interface EditedItem {
     amount: number;
 }
 
-const Transactions = () => {
+const Transactions = ({ selectedCategory, selectedMonth }: TransactionProps) => {
     const {
         data: { Transactions: data },
     } = useSuspenseQuery<any>(transactionsQuery);
@@ -50,19 +55,37 @@ const Transactions = () => {
         refetchQueries: [transactionsQuery, categoriesQuery],
     });
 
+    // data.map((d: Transaction) => console.log(format(new Date(d.date), "MMM")));
+
     const [editedItem, setEditedItem] = useState<Transaction | null>(null);
+    const transformedData = useMemo(() => {
+        let filteredData = selectedCategory ? data.filter((transaction: Transaction) => transaction.category.name === selectedCategory) : data;
+        filteredData = selectedMonth
+            ? filteredData.filter((transaction: Transaction) => format(new Date(transaction.date), "MMM").toLowerCase() === selectedMonth.toLowerCase())
+            : filteredData;
+        filteredData = filteredData
+            .map((d: Transaction) => ({
+                ...d,
+                date: format(new Date(d.date), "dd-MMMM-yyyy"),
+            }))
+            .sort((a: { date: string | number | Date }, b: { date: string | number | Date }) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        return filteredData;
+    }, [data, selectedCategory, selectedMonth]);
 
     if (deleteLoading || updateLoading) return "Loading...";
     if (deleteError || updateError) return `${deleteError ? deleteError.message : updateError ? updateError.message : "Error!"}`;
 
-    const transformedData = data
-        .map((d: Transaction) => ({
-            ...d,
-            date: format(new Date(d.date), "dd-MMMM-yyyy"),
-            // category: d.category.name,
-        }))
-        .sort((a: { date: string | number | Date }, b: { date: string | number | Date }) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // let transformedData = data
+    // .map((d: Transaction) => ({
+    //     ...d,
+    //     date: format(new Date(d.date), "dd-MMMM-yyyy"),
+    //     // category: d.category.name,
+    // }))
+    // .sort((a: { date: string | number | Date }, b: { date: string | number | Date }) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+    // transformedData = selectedCategory ? transformedData.filter((transaction: any) => transaction.category.name === selectedCategory) : transformedData;
+    // transformedData = selectedMonth ? transformedData.filter((transaction:any) => transaction.date === selectedMonth) : transformedData;
     const handleEditClick = (item: Transaction) => {
         setEditedItem(item);
     };

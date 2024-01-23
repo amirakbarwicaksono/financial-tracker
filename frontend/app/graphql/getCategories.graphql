@@ -1,7 +1,7 @@
-query {
+query ($range: RangeInput) {
     Categories {
         id
         name
-        total
+        total(range: $range)
     }
 }

@@ -3,9 +3,10 @@
 export const dynamic = "force-dynamic";
 
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
+import { lastDayOfMonth } from "date-fns";
 import { useEffect, useState } from "react";
 import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import query from "../graphql/getCategories.graphql";
+import getCategoriesQuery from "../graphql/getCategories.graphql";
 import { dimmedColor } from "../utils/dimmedColor";
 
 type DataPoint = {
@@ -31,14 +32,26 @@ const CustomTooltip: React.FC<{
     return null;
 };
 
-const PieGraph = () => {
+interface PieGraphProps {
+    selectedCategory: string | null;
+    setSelectedCategory: React.Dispatch<React.SetStateAction<string | null>>;
+    selectedMonth: string | null;
+}
+
+const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth }: PieGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
     // const [hoverIndex, setHoverIndex] = useState(-1);
 
+    const year = 2024;
+
+    const startDate = `${year}-${selectedMonth}-01`;
+    const endDate = `${year}-${selectedMonth}-${lastDayOfMonth(new Date(`${year}-${selectedMonth}-01`)).getDate()}`;
+
     const {
         data: { Categories: data },
-    } = useSuspenseQuery<any>(query);
-
+    } = useSuspenseQuery<any>(getCategoriesQuery, {
+        variables: selectedMonth ? { range: { startDate, endDate } } : {},
+    });
     const transformedData = data.map(({ name, total }: { name: string; total: number }) => {
         return { name, value: total };
     });
@@ -105,7 +118,15 @@ const PieGraph = () => {
                     fill="#888a2s"
                     paddingAngle={0}
                     dataKey="value"
-                    onClick={(_, index) => (activeIndex === index ? setActiveIndex(-1) : setActiveIndex(index))}
+                    onClick={(_, index) => {
+                        const categoryID = transformedData[index]?.name;
+                        if (selectedCategory !== categoryID) {
+                            setSelectedCategory(categoryID);
+                        } else {
+                            setSelectedCategory(null);
+                        }
+                        setActiveIndex(activeIndex === index ? -1 : index);
+                    }}
                 >
                     {transformedData.map((_: any, index: number) => (
                         <Cell
@@ -120,7 +141,7 @@ const PieGraph = () => {
 
                     <Label
                         fill="#e5e5e5"
-                        value={total}
+                        value={selectedCategory ? data.find((cat: { name: string }) => cat.name === selectedCategory)?.total : total}
                         position="center"
                     />
                 </Pie>

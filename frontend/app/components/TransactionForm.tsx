@@ -66,11 +66,6 @@ const TransactionForm = () => {
                     setFormData={setFormData}
                 />
 
-                {/* <Input
-                    placeholder="Date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                /> */}
                 <DatePicker
                     placeholderText="Date"
                     selected={formData.date ? new Date(formData.date) : null}
