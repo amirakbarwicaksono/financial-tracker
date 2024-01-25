@@ -32,7 +32,6 @@ const SelectCategories = ({ formData, setFormData }: SelectProps) => {
             <option
                 value=""
                 disabled
-                selected
                 className="bg-black font-bold text-white"
             >
                 Category

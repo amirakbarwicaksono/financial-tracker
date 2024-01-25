@@ -11,7 +11,7 @@
 }
 
 body {
-    @apply bg-purple-950  overflow-hidden;
+    @apply overflow-hidden;
 }
 
 .border-thin {
