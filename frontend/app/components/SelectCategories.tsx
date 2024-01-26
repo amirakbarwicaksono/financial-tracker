@@ -25,6 +25,7 @@ const SelectCategories = ({ formData, setFormData }: SelectProps) => {
 
     return (
         <select
+            defaultValue=""
             id="categories"
             className=" focus:border-fuchsia-600 hover:cursor-pointer bg-white bg-opacity-5 py-[9px] px-1 rounded-lg text-neutral-200 w-full outline-none border-thin min-w-[100px] "
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}

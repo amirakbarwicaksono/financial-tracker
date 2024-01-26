@@ -5,11 +5,13 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Session } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
+// import { createClient } from "../utils/supabase/client";
 import { supabase } from "./config";
 
 const Login = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    // const supabase = createClient();
 
     useEffect(() => {
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {

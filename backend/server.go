@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aashish47/finance-tracker/backend/middleware"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/aashish47/finance-tracker/backend/config"
@@ -29,14 +31,17 @@ func main() {
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	// Enable CORS
+	authMiddleware := middleware.AuthMiddleware(srv)
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"}, // Replace with your frontend's origin
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
-	}).Handler(srv)
+	}).Handler(authMiddleware)
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	// http.Handle("/query", corsHandler)
+
 	http.Handle("/query", corsHandler)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)

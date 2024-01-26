@@ -6,8 +6,12 @@ package graph
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/aashish47/finance-tracker/backend/graph/model"
+	"github.com/aashish47/finance-tracker/backend/middleware"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // Transactions is the resolver for the transactions field.
@@ -120,6 +124,21 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (*bool
 
 // Transactions is the resolver for the Transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
+
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		// Handle error: failed to retrieve claims from context
+		// This could happen if the key or type is incorrect
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+
+	// Now you can access the claims and perform authentication and authorization checks
+
+	for key, value := range claims {
+		fmt.Printf("%s: %v\n", key, value)
+	}
+
 	transactions := []*model.Transaction{}
 
 	query := r.DB
