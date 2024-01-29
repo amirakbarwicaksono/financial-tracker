@@ -12,4 +12,5 @@ type Transaction struct {
 	IsIncome   bool
 	CategoryID uint
 	Category   Category
+	UserId     string
 }

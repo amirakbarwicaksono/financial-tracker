@@ -7,16 +7,14 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aashish47/finance-tracker/backend/graph/model"
 	"github.com/aashish47/finance-tracker/backend/middleware"
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // Transactions is the resolver for the transactions field.
 func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
-
 	transactions := []*model.Transaction{}
 	query := r.DB.Where("category_id = ?", obj.ID)
 
@@ -54,6 +52,19 @@ func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, range
 
 // CreateTransaction is the resolver for the createTransaction field.
 func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.TransactionInput) (*model.Transaction, error) {
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		// Handle error: failed to retrieve claims from context
+		// This could happen if the key or type is incorrect
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
 	category := &model.Category{}
 	if err := r.DB.First(&category, input.CategoryID).Error; err != nil {
 		return nil, err
@@ -66,6 +77,7 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Tr
 		IsIncome:   input.IsIncome,
 		Date:       input.Date,
 		Amount:     input.Amount,
+		UserId:     userId,
 	}
 
 	if err := r.DB.Create(newTransaction).Error; err != nil {
@@ -124,7 +136,6 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (*bool
 
 // Transactions is the resolver for the Transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
-
 	key := middleware.ContextKeyClaims
 	claims, ok := ctx.Value(key).(jwt.MapClaims)
 	if !ok {
@@ -135,13 +146,13 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 
 	// Now you can access the claims and perform authentication and authorization checks
 
-	for key, value := range claims {
-		fmt.Printf("%s: %v\n", key, value)
+	transactions := []*model.Transaction{}
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
 	}
 
-	transactions := []*model.Transaction{}
-
-	query := r.DB
+	query := r.DB.Where("user_id = ?", userId)
 
 	if rangeArg != nil {
 		query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)

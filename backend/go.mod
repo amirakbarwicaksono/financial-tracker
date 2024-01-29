@@ -11,7 +11,7 @@ require (
 
 require github.com/rs/cors v1.10.1
 
-require github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+require github.com/dgrijalva/jwt-go v3.2.0+incompatible
 
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect

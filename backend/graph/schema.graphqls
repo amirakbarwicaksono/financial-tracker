@@ -5,6 +5,7 @@ type Transaction {
     isIncome: Boolean!
     date: String!
     amount: Float!
+    userId: String!
 }
 
 type Category {

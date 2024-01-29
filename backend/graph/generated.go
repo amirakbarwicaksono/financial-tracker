@@ -74,6 +74,7 @@ type ComplexityRoot struct {
 		ID       func(childComplexity int) int
 		IsIncome func(childComplexity int) int
 		Item     func(childComplexity int) int
+		UserId   func(childComplexity int) int
 	}
 }
 
@@ -269,6 +270,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Transaction.Item(childComplexity), true
+
+	case "Transaction.userId":
+		if e.complexity.Transaction.UserId == nil {
+			break
+		}
+
+		return e.complexity.Transaction.UserId(childComplexity), true
 
 	}
 	return 0, false
@@ -715,6 +723,8 @@ func (ec *executionContext) fieldContext_Category_transactions(ctx context.Conte
 				return ec.fieldContext_Transaction_date(ctx, field)
 			case "amount":
 				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
@@ -833,6 +843,8 @@ func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.
 				return ec.fieldContext_Transaction_date(ctx, field)
 			case "amount":
 				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
@@ -899,6 +911,8 @@ func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.
 				return ec.fieldContext_Transaction_date(ctx, field)
 			case "amount":
 				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
@@ -1017,6 +1031,8 @@ func (ec *executionContext) fieldContext_Query_Transactions(ctx context.Context,
 				return ec.fieldContext_Transaction_date(ctx, field)
 			case "amount":
 				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
@@ -1083,6 +1099,8 @@ func (ec *executionContext) fieldContext_Query_Transaction(ctx context.Context, 
 				return ec.fieldContext_Transaction_date(ctx, field)
 			case "amount":
 				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
@@ -1612,6 +1630,50 @@ func (ec *executionContext) fieldContext_Transaction_amount(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Transaction_userId(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Transaction_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserId, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Transaction_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Transaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3925,6 +3987,11 @@ func (ec *executionContext) _Transaction(ctx context.Context, sel ast.SelectionS
 			}
 		case "amount":
 			out.Values[i] = ec._Transaction_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "userId":
+			out.Values[i] = ec._Transaction_userId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

@@ -8,4 +8,5 @@ type Transaction struct {
 	IsIncome   bool      `json:"isIncome"`
 	Date       string    `json:"date"`
 	Amount     float64   `json:"amount"`
+	UserId     string    `json:"userId"`
 }
