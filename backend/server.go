@@ -24,8 +24,10 @@ func main() {
 	resolver := graph.NewResolver(db)
 
 	port := os.Getenv("PORT")
+	origin := "https://fintrack-1scr.onrender.com"
 	if port == "" {
 		port = defaultPort
+		origin = "http://localhost:3000"
 	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
@@ -33,7 +35,7 @@ func main() {
 	// Enable CORS
 	authMiddleware := middleware.AuthMiddleware(srv)
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // Replace with your frontend's origin
+		AllowedOrigins:   []string{origin}, // Replace with your frontend's origin
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

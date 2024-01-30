@@ -7,7 +7,7 @@ import { ApolloNextAppProvider, NextSSRApolloClient, NextSSRInMemoryCache, SSRMu
 function makeClient() {
     const httpLink = new HttpLink({
         // https://studio.apollographql.com/public/spacex-l4uc6p/
-        uri: "http://localhost:8080/query",
+        uri: process.env.NEXT_PUBLIC_SERVER,
         credentials: "include",
     });
 
