@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/aashish47/finance-tracker/backend/graph/model"
@@ -31,23 +32,25 @@ func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category
 
 // Total is the resolver for the total field.
 func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) (*float64, error) {
-	var total float64
-	transactions := []*model.Transaction{}
 
-	query := r.DB.Where("category_id = ?", obj.ID)
+	var total sql.NullFloat64
+
+	query := r.DB.Model(&model.Transaction{}).Select("COALESCE(SUM(amount), 0)").Where("category_id = ?", obj.ID)
 
 	if rangeArg != nil {
-		query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
+		query = query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
 	}
 
-	if err := query.Find(&transactions).Error; err != nil {
+	if err := query.Row().Scan(&total); err != nil {
 		return nil, err
 	}
 
-	for _, transaction := range transactions {
-		total += transaction.Amount
+	if !total.Valid {
+		// Handle case where the sum is NULL (no transactions found)
+		return nil, nil
 	}
-	return &total, nil
+
+	return &total.Float64, nil
 }
 
 // CreateTransaction is the resolver for the createTransaction field.

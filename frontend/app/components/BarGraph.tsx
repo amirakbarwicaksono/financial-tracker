@@ -81,7 +81,6 @@ const BarGraph = ({ selectedMonth, setSelectedMonth }: BarGraphProps) => {
                     onMouseOut={(_, index) => setHoverIndex(-1)}
                     onClick={(_, index) => {
                         const month = resultData[index]?.month;
-                        console.log(month);
                         if (selectedMonth !== month) {
                             setSelectedMonth(month);
                         } else {

@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client";
+import { useApolloClient, useMutation } from "@apollo/client";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -10,6 +10,7 @@ import Input from "./Input";
 import SelectCategories from "./SelectCategories";
 
 const TransactionForm = () => {
+    const client = useApolloClient();
     const [formData, setFormData] = useState({
         item: "",
         amount: "",

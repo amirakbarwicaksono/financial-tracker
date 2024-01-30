@@ -82,13 +82,13 @@ const EditPopup: React.FC<EditPopupProps> = ({ transaction, onUpdate, onClose })
                         id="categories"
                         className="hover:cursor-pointer border   rounded-md p-2  w-full text-gray-600 focus:outline-purple-700"
                         onChange={(e) => handleInputChange("categoryID", e.target.value)}
+                        defaultValue={editedItem?.categoryID || ""}
                     >
                         {categories.map((category: any) => (
                             <option
                                 key={category.id}
                                 value={category.id}
                                 className=" bg-black font-extralight text-neutral-200"
-                                selected={category.id === editedItem.categoryID}
                             >
                                 {category.name}
                             </option>
