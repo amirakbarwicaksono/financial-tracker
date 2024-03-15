@@ -9,6 +9,12 @@ type Category struct {
 	Total        *float64       `json:"total,omitempty"`
 }
 
+type Mutation struct {
+}
+
+type Query struct {
+}
+
 type RangeInput struct {
 	StartDate string `json:"startDate"`
 	EndDate   string `json:"endDate"`

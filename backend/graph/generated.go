@@ -24,6 +24,7 @@ import (
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 	return &executableSchema{
+		schema:     cfg.Schema,
 		resolvers:  cfg.Resolvers,
 		directives: cfg.Directives,
 		complexity: cfg.Complexity,
@@ -31,6 +32,7 @@ func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 }
 
 type Config struct {
+	Schema     *ast.Schema
 	Resolvers  ResolverRoot
 	Directives DirectiveRoot
 	Complexity ComplexityRoot
@@ -85,7 +87,7 @@ type CategoryResolver interface {
 type MutationResolver interface {
 	CreateTransaction(ctx context.Context, input model.TransactionInput) (*model.Transaction, error)
 	UpdateTransaction(ctx context.Context, id int, input model.UpdateTransactionInput) (*model.Transaction, error)
-	DeleteTransaction(ctx context.Context, id int) (*bool, error)
+	DeleteTransaction(ctx context.Context, id int) (*model.Transaction, error)
 }
 type QueryResolver interface {
 	Transactions(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Transaction, error)
@@ -98,12 +100,16 @@ type TransactionResolver interface {
 }
 
 type executableSchema struct {
+	schema     *ast.Schema
 	resolvers  ResolverRoot
 	directives DirectiveRoot
 	complexity ComplexityRoot
 }
 
 func (e *executableSchema) Schema() *ast.Schema {
+	if e.schema != nil {
+		return e.schema
+	}
 	return parsedSchema
 }
 
@@ -375,14 +381,14 @@ func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapSchema(parsedSchema), nil
+	return introspection.WrapSchema(ec.Schema()), nil
 }
 
 func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
+	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 //go:embed "schema.graphqls"
@@ -954,9 +960,9 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*model.Transaction)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -966,7 +972,23 @@ func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Transaction_id(ctx, field)
+			case "item":
+				return ec.fieldContext_Transaction_item(ctx, field)
+			case "category":
+				return ec.fieldContext_Transaction_category(ctx, field)
+			case "isIncome":
+				return ec.fieldContext_Transaction_isIncome(ctx, field)
+			case "date":
+				return ec.fieldContext_Transaction_date(ctx, field)
+			case "amount":
+				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
 	}
 	defer func() {
@@ -3467,8 +3489,6 @@ func (ec *executionContext) unmarshalInputRangeInput(ctx context.Context, obj in
 		}
 		switch k {
 		case "startDate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3476,8 +3496,6 @@ func (ec *executionContext) unmarshalInputRangeInput(ctx context.Context, obj in
 			}
 			it.StartDate = data
 		case "endDate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3505,8 +3523,6 @@ func (ec *executionContext) unmarshalInputTransactionInput(ctx context.Context, 
 		}
 		switch k {
 		case "item":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("item"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3514,8 +3530,6 @@ func (ec *executionContext) unmarshalInputTransactionInput(ctx context.Context, 
 			}
 			it.Item = data
 		case "categoryID":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
 			data, err := ec.unmarshalNID2int(ctx, v)
 			if err != nil {
@@ -3523,8 +3537,6 @@ func (ec *executionContext) unmarshalInputTransactionInput(ctx context.Context, 
 			}
 			it.CategoryID = data
 		case "isIncome":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isIncome"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -3532,8 +3544,6 @@ func (ec *executionContext) unmarshalInputTransactionInput(ctx context.Context, 
 			}
 			it.IsIncome = data
 		case "date":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3541,8 +3551,6 @@ func (ec *executionContext) unmarshalInputTransactionInput(ctx context.Context, 
 			}
 			it.Date = data
 		case "amount":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
 			data, err := ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
@@ -3570,8 +3578,6 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 		}
 		switch k {
 		case "item":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("item"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -3579,8 +3585,6 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 			}
 			it.Item = data
 		case "categoryID":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryID"))
 			data, err := ec.unmarshalOID2ᚖint(ctx, v)
 			if err != nil {
@@ -3588,8 +3592,6 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 			}
 			it.CategoryID = data
 		case "isIncome":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isIncome"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3597,8 +3599,6 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 			}
 			it.IsIncome = data
 		case "date":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -3606,8 +3606,6 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 			}
 			it.Date = data
 		case "amount":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {

@@ -1,29 +1,24 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import Edit from "@/app/Icons/Edit";
+import Trash from "@/app/Icons/Trash";
+import EditPopup from "@/app/components/EditPopup";
+import IconButton from "@/app/components/IconButton";
+import deleteTransactionMutation from "@/app/graphql/deleteTransaction.graphql";
+import transactionsQuery from "@/app/graphql/getTransactions.graphql";
+import updateTransactionMutation from "@/app/graphql/updateTransaction.graphql";
+import { createRefetchQueries } from "@/app/utils/createRefetchQueries";
 import { useMutation } from "@apollo/client";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { format } from "date-fns";
-import Edit from "../Icons/Edit";
-import Trash from "../Icons/Trash";
-import deleteTransactionMutation from "../graphql/deleteTransaction.graphql";
-import categoriesQuery from "../graphql/getCategories.graphql";
-import transactionsQuery from "../graphql/getTransactions.graphql";
-import IconButton from "./IconButton";
-
-// Transactions.js
 import { useMemo, useState } from "react";
-import EditPopup from "./EditPopup";
-
-import updateTransactionMutation from "../graphql/updateTransaction.graphql";
 
 interface TransactionProps {
     selectedCategory: string | null;
     selectedMonth: string | null;
 }
 
-interface Transaction {
+export interface Transaction {
     id: string;
     date: string;
     item: string;
@@ -34,7 +29,7 @@ interface Transaction {
     amount: number;
 }
 
-interface EditedItem {
+export interface EditedItem {
     id: string;
     item: string;
     date: string;
@@ -43,21 +38,20 @@ interface EditedItem {
 }
 
 const Transactions = ({ selectedCategory, selectedMonth }: TransactionProps) => {
+    const [editedItem, setEditedItem] = useState<Transaction | null>(null);
+
     const {
         data: { Transactions: data },
     } = useSuspenseQuery<any>(transactionsQuery);
 
     const [deleteItem, { loading: deleteLoading, error: deleteError }] = useMutation(deleteTransactionMutation, {
-        refetchQueries: [transactionsQuery, categoriesQuery],
+        refetchQueries: ({ data }) => createRefetchQueries(data),
     });
 
     const [updateItem, { loading: updateLoading, error: updateError }] = useMutation(updateTransactionMutation, {
-        refetchQueries: [transactionsQuery, categoriesQuery],
+        refetchQueries: ({ data }) => createRefetchQueries(data),
     });
 
-    // data.map((d: Transaction) => console.log(format(new Date(d.date), "MMM")));
-
-    const [editedItem, setEditedItem] = useState<Transaction | null>(null);
     const transformedData = useMemo(() => {
         let filteredData = selectedCategory ? data.filter((transaction: Transaction) => transaction.category.name === selectedCategory) : data;
         filteredData = selectedMonth
@@ -76,16 +70,6 @@ const Transactions = ({ selectedCategory, selectedMonth }: TransactionProps) => 
     if (deleteLoading || updateLoading) return "Loading...";
     if (deleteError || updateError) return `${deleteError ? deleteError.message : updateError ? updateError.message : "Error!"}`;
 
-    // let transformedData = data
-    // .map((d: Transaction) => ({
-    //     ...d,
-    //     date: format(new Date(d.date), "dd-MMMM-yyyy"),
-    //     // category: d.category.name,
-    // }))
-    // .sort((a: { date: string | number | Date }, b: { date: string | number | Date }) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    // transformedData = selectedCategory ? transformedData.filter((transaction: any) => transaction.category.name === selectedCategory) : transformedData;
-    // transformedData = selectedMonth ? transformedData.filter((transaction:any) => transaction.date === selectedMonth) : transformedData;
     const handleEditClick = (item: Transaction) => {
         setEditedItem(item);
     };
@@ -141,7 +125,9 @@ const Transactions = ({ selectedCategory, selectedMonth }: TransactionProps) => 
                                     </div>
                                     <div
                                         className="w-4 flex items-center"
-                                        onClick={() => deleteItem({ variables: { id: d.id } })}
+                                        onClick={() => {
+                                            deleteItem({ variables: { id: d.id } });
+                                        }}
                                     >
                                         <IconButton>
                                             <Trash />

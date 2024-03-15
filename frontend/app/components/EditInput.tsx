@@ -1,4 +1,3 @@
-// EditInput.tsx
 import React, { ChangeEvent } from "react";
 
 interface EditInputProps {

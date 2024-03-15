@@ -1,11 +1,11 @@
 "use client";
 
+import { dimmedColor } from "@/app/utils/dimmedColor";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { dimmedColor } from "../utils/dimmedColor";
 
-import query from "../graphql/getTransactions.graphql";
+import query from "@/app/graphql/getTransactions.graphql";
 
 type DataPoint = {
     month: string;
@@ -88,7 +88,6 @@ const BarGraph = ({ selectedMonth, setSelectedMonth }: BarGraphProps) => {
                         }
                         setActiveIndex(activeIndex === index ? -1 : index);
                     }}
-                    // onClick={(_, index) => (activeIndex === index ? setActiveIndex(-1) : setActiveIndex(index))}
                     dataKey="amount"
                 >
                     {resultData.map((_, index) => (

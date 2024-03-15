@@ -12,7 +12,6 @@ export default function Main() {
 
     useEffect(() => {
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            // console.log(event, session);
             localStorage.setItem("access_token", session?.access_token ?? "");
             localStorage.setItem("refresh_token", session?.refresh_token ?? "");
             localStorage.setItem("user", JSON.stringify(session?.user) ?? "");

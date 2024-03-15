@@ -1,29 +1,10 @@
-// EditPopup.tsx
+import EditInput from "@/app/components/EditInput";
+import { EditedItem, Transaction } from "@/app/components/Transactions";
+import categoriesQuery from "@/app/graphql/getCategories.graphql";
 import { useSuspenseQuery } from "@apollo/client";
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import categoriesQuery from "../graphql/getCategories.graphql";
-import EditInput from "./EditInput";
-
-interface Transaction {
-    id: string;
-    date: string;
-    item: string;
-    category: {
-        id: string;
-        name: string;
-    };
-    amount: number;
-}
-
-interface EditedItem {
-    id: string;
-    item: string;
-    date: string;
-    categoryID: string;
-    amount: number;
-}
 
 interface EditPopupProps {
     transaction: Transaction;

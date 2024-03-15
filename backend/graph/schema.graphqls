@@ -25,7 +25,7 @@ type Query {
 type Mutation {
     createTransaction(input: TransactionInput!): Transaction
     updateTransaction(id: ID!, input: UpdateTransactionInput!): Transaction
-    deleteTransaction(id: ID!): Boolean
+    deleteTransaction(id: ID!): Transaction
 }
 
 input RangeInput {

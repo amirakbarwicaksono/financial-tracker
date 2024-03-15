@@ -1,16 +1,14 @@
-import { useApolloClient, useMutation } from "@apollo/client";
+import Button from "@/app/components/Button";
+import Input from "@/app/components/Input";
+import createTransactionMutation from "@/app/graphql/createTransaction.graphql";
+import categoriesQuery from "@/app/graphql/getCategories.graphql";
+import { createRefetchQueries } from "@/app/utils/createRefetchQueries";
+import { useMutation, useSuspenseQuery } from "@apollo/client";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import createTransactionMutation from "../graphql/createTransaction.graphql";
-import categoriesQuery from "../graphql/getCategories.graphql";
-import transactionsQuery from "../graphql/getTransactions.graphql";
-import Button from "./Button";
-import Input from "./Input";
-import SelectCategories from "./SelectCategories";
 
 const TransactionForm = () => {
-    const client = useApolloClient();
     const [formData, setFormData] = useState({
         item: "",
         amount: "",
@@ -18,7 +16,13 @@ const TransactionForm = () => {
         date: "",
     });
 
-    const [createTransaction, { loading, error }] = useMutation(createTransactionMutation, { refetchQueries: [transactionsQuery, categoriesQuery] });
+    const {
+        data: { Categories: categories },
+    } = useSuspenseQuery<any>(categoriesQuery);
+
+    const [createTransaction, { loading, error }] = useMutation(createTransactionMutation, {
+        refetchQueries: ({ data }) => createRefetchQueries(data),
+    });
 
     if (loading) return "Submitting...";
     if (error) return `Submission error! ${error.message}`;
@@ -62,10 +66,30 @@ const TransactionForm = () => {
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 />
-                <SelectCategories
-                    formData={formData}
-                    setFormData={setFormData}
-                />
+
+                <select
+                    defaultValue=""
+                    id="categories"
+                    className=" focus:border-fuchsia-600 hover:cursor-pointer bg-white bg-opacity-5 py-[9px] px-1 rounded-lg text-neutral-200 w-full outline-none border-thin min-w-[100px] "
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                    <option
+                        value=""
+                        disabled
+                        className="bg-black font-bold text-white"
+                    >
+                        Category
+                    </option>
+                    {categories.map((category: any) => (
+                        <option
+                            key={category.id}
+                            value={category.id}
+                            className=" bg-black font-extralight"
+                        >
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
 
                 <DatePicker
                     placeholderText="Date"

@@ -1,13 +1,14 @@
 "use client";
+
+import Accounts from "@/app/components/Accounts";
+import BarGraph from "@/app/components/BarGraph";
+import Navbar from "@/app/components/Navbar";
+import PieGraph from "@/app/components/PieGraph";
+import Sidebar from "@/app/components/Sidebar";
+import Tabs from "@/app/components/Tabs";
+import TransactionForm from "@/app/components/TransactionForm";
+import Transactions from "@/app/components/Transactions";
 import { useState } from "react";
-import Accounts from "./Accounts";
-import BarGraph from "./BarGraph";
-import Navbar from "./Navbar";
-import PieGraph from "./PieGraph";
-import Sidebar from "./Sidebar";
-import Tabs from "./Tabs";
-import TransactionForm from "./TransactionForm";
-import Transactions from "./Transactions";
 
 export default function Home() {
     const [tab, setTab] = useState(1);

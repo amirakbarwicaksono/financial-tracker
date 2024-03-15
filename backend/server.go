@@ -25,8 +25,10 @@ func main() {
 
 	port := os.Getenv("PORT")
 	origin := "https://fintrack-1scr.onrender.com"
+	domain := ""
 	if port == "" {
 		port = defaultPort
+		domain = "localhost"
 		origin = "http://localhost:3000"
 	}
 
@@ -47,5 +49,5 @@ func main() {
 	http.Handle("/query", corsHandler)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(domain+":"+port, nil))
 }

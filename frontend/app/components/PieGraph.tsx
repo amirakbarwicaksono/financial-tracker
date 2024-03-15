@@ -1,13 +1,11 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import getCategoriesQuery from "@/app/graphql/getCategories.graphql";
+import { dimmedColor } from "@/app/utils/dimmedColor";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { lastDayOfMonth } from "date-fns";
 import { useEffect, useState } from "react";
 import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import getCategoriesQuery from "../graphql/getCategories.graphql";
-import { dimmedColor } from "../utils/dimmedColor";
 
 type DataPoint = {
     name: string;
@@ -40,10 +38,7 @@ interface PieGraphProps {
 
 const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth }: PieGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
-    // const [hoverIndex, setHoverIndex] = useState(-1);
-
     const year = 2024;
-
     const startDate = `${year}-${selectedMonth}-01`;
     const endDate = `${year}-${selectedMonth}-${lastDayOfMonth(new Date(`${year}-${selectedMonth}-01`)).getDate()}`;
 
@@ -52,6 +47,7 @@ const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth }: PieG
     } = useSuspenseQuery<any>(getCategoriesQuery, {
         variables: selectedMonth ? { range: { startDate, endDate } } : {},
     });
+
     const transformedData = data.map(({ name, total }: { name: string; total: number }) => {
         return { name, value: total };
     });
@@ -59,14 +55,12 @@ const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth }: PieG
     const [total, setTotal] = useState(0);
 
     useEffect(() => {
-        // Use reduce to calculate the total when the data array changes
         const calculatedTotal = data.reduce((acc: any, item: { total: any }) => {
             return acc + item.total;
         }, 0);
 
-        // Update the total state
         setTotal(calculatedTotal);
-    }, [data]); // Trigger the effect when the data array changes
+    }, [data]);
 
     const COLORS = [
         "#e6194B",
