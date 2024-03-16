@@ -14,12 +14,16 @@ export default function Home() {
     const [tab, setTab] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+    const [selectedYear, setSelectedYear] = useState<number>(2024);
 
     return (
         <div className="bg-purple-950  flex flex-col-reverse md:flex-row h-screen">
             <Sidebar />
             <div className="w-full  flex flex-col p-2 flex-grow gap-2">
-                <Navbar />
+                <Navbar
+                    selectedYear={selectedYear}
+                    setSelectedYear={setSelectedYear}
+                />
                 <Tabs
                     tab={tab}
                     setTab={setTab}
@@ -34,6 +38,7 @@ export default function Home() {
                         <PieGraph
                             selectedCategory={selectedCategory}
                             selectedMonth={selectedMonth}
+                            selectedYear={selectedYear}
                             setSelectedCategory={setSelectedCategory}
                         />
                     </div>
@@ -46,6 +51,7 @@ export default function Home() {
                         <BarGraph
                             selectedMonth={selectedMonth}
                             setSelectedMonth={setSelectedMonth}
+                            selectedYear={selectedYear}
                         />
                     </div>
                     <div
@@ -75,6 +81,7 @@ export default function Home() {
                         <Transactions
                             selectedCategory={selectedCategory}
                             selectedMonth={selectedMonth}
+                            selectedYear={selectedYear}
                         />
                     </div>
                 </div>

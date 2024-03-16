@@ -33,15 +33,19 @@ const CustomTooltip: React.FC<{
 interface BarGraphProps {
     selectedMonth: string | null;
     setSelectedMonth: React.Dispatch<React.SetStateAction<string | null>>;
+    selectedYear: number;
 }
 
-const BarGraph = ({ selectedMonth, setSelectedMonth }: BarGraphProps) => {
+const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
     const [hoverIndex, setHoverIndex] = useState(-1);
 
+    const startDate = `${selectedYear}-01-01`;
+    const endDate = `${selectedYear}-12-31`;
+
     const {
         data: { Transactions: data },
-    } = useSuspenseQuery<any>(query);
+    } = useSuspenseQuery<any>(query, { variables: { range: { startDate, endDate } } });
 
     // Step 1: Parse the input data
     const parsedData = data.map(({ date, amount }: { date: string; amount: number }) => ({

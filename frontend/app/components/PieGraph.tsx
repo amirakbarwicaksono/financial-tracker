@@ -34,18 +34,23 @@ interface PieGraphProps {
     selectedCategory: string | null;
     setSelectedCategory: React.Dispatch<React.SetStateAction<string | null>>;
     selectedMonth: string | null;
+    selectedYear: number;
 }
 
-const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth }: PieGraphProps) => {
+const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth, selectedYear }: PieGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
-    const year = 2024;
-    const startDate = `${year}-${selectedMonth}-01`;
-    const endDate = `${year}-${selectedMonth}-${lastDayOfMonth(new Date(`${year}-${selectedMonth}-01`)).getDate()}`;
+    // const year = 2024;
+    const startDate = selectedMonth ? `${selectedYear}-${selectedMonth}-01` : `${selectedYear}-01-01`;
+    const endDate = selectedMonth
+        ? `${selectedYear}-${selectedMonth}-${lastDayOfMonth(new Date(`${selectedYear}-${selectedMonth}-01`)).getDate()}`
+        : `${selectedYear}-12-31`;
+
+    console.log(startDate, endDate);
 
     const {
         data: { Categories: data },
     } = useSuspenseQuery<any>(getCategoriesQuery, {
-        variables: selectedMonth ? { range: { startDate, endDate } } : {},
+        variables: { range: { startDate, endDate } },
     });
 
     const transformedData = data.map(({ name, total }: { name: string; total: number }) => {

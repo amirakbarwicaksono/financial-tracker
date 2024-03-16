@@ -20,6 +20,7 @@ type Query {
     Transaction(id: ID!): Transaction
     Categories: [Category]
     Category(id: ID!): Category
+    Years: [Int]
 }
 
 type Mutation {

@@ -16,6 +16,7 @@ import { useMemo, useState } from "react";
 interface TransactionProps {
     selectedCategory: string | null;
     selectedMonth: string | null;
+    selectedYear: number;
 }
 
 export interface Transaction {
@@ -37,12 +38,15 @@ export interface EditedItem {
     amount: number;
 }
 
-const Transactions = ({ selectedCategory, selectedMonth }: TransactionProps) => {
+const Transactions = ({ selectedCategory, selectedMonth, selectedYear }: TransactionProps) => {
     const [editedItem, setEditedItem] = useState<Transaction | null>(null);
 
+    const startDate = `${selectedYear}-01-01`;
+    const endDate = `${selectedYear}-12-31`;
+    console.log(startDate, endDate);
     const {
         data: { Transactions: data },
-    } = useSuspenseQuery<any>(transactionsQuery);
+    } = useSuspenseQuery<any>(transactionsQuery, { variables: { range: { startDate, endDate } } });
 
     const [deleteItem, { loading: deleteLoading, error: deleteError }] = useMutation(deleteTransactionMutation, {
         refetchQueries: ({ data }) => createRefetchQueries(data),

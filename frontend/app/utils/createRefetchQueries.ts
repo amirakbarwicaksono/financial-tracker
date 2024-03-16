@@ -1,5 +1,7 @@
 import getCategoriesQuery from "@/app/graphql/getCategories.graphql";
 import transactionsQuery from "@/app/graphql/getTransactions.graphql";
+import getYears from "@/app/graphql/getYears.graphql";
+
 import { format, lastDayOfMonth } from "date-fns";
 import { enUS } from "date-fns/locale";
 
@@ -10,8 +12,18 @@ export const createRefetchQueries = (data: any) => {
                   locale: enUS,
               }).toUpperCase()
             : null;
-    const year = 2024;
-    const startDate = `${year}-${updatedMonth}-01`;
-    const endDate = `${year}-${updatedMonth}-${lastDayOfMonth(new Date(`${year}-${updatedMonth}-01`)).getDate()}`;
-    return [{ query: transactionsQuery }, { query: getCategoriesQuery }, { query: getCategoriesQuery, variables: { range: { startDate, endDate } } }];
+
+    const updatedYear =
+        data?.deleteTransaction?.date || data?.updateTransaction?.date || data?.createTransaction?.date
+            ? new Date(data.deleteTransaction?.date || data.updateTransaction?.date || data.createTransaction?.date).getFullYear()
+            : null;
+
+    const startDate = `${updatedYear}-${updatedMonth}-01`;
+    const endDate = `${updatedYear}-${updatedMonth}-${lastDayOfMonth(new Date(`${updatedYear}-${updatedMonth}-01`)).getDate()}`;
+    return [
+        { query: transactionsQuery, variables: { range: { startDate: `${updatedYear}-01-01`, endDate: `${updatedYear}-12-31` } } },
+        { query: getCategoriesQuery, variables: { range: { startDate: `${updatedYear}-01-01`, endDate: `${updatedYear}-12-31` } } },
+        { query: getCategoriesQuery, variables: { range: { startDate, endDate } } },
+        { query: getYears },
+    ];
 };

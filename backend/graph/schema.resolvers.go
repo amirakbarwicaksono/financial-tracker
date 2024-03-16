@@ -156,7 +156,7 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 	}
 
 	query := r.DB.Where("user_id = ?", userId)
-
+	fmt.Print(rangeArg)
 	if rangeArg != nil {
 		query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
 	}
@@ -196,6 +196,32 @@ func (r *queryResolver) Category(ctx context.Context, id int) (*model.Category, 
 		return nil, err
 	}
 	return &category, nil
+}
+
+// Years is the resolver for the Years field.
+func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
+	var years []*int
+
+	// Execute the SQL query using gorm
+	rows, err := r.DB.Raw("SELECT DISTINCT extract(YEAR FROM DATE) AS year FROM transactions").Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over the result set and extract years
+	for rows.Next() {
+		var year int
+		if err := rows.Scan(&year); err != nil {
+			return nil, err
+		}
+		years = append(years, &year)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return years, nil
 }
 
 // Category is the resolver for the category field.

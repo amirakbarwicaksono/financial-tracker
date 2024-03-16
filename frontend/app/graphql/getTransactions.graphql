@@ -1,5 +1,5 @@
-query {
-    Transactions {
+query ($range: RangeInput) {
+    Transactions(range: $range) {
         id
         item
         category {
