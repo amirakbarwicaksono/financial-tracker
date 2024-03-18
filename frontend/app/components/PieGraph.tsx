@@ -2,8 +2,8 @@
 
 import getCategoriesQuery from "@/app/graphql/getCategories.graphql";
 import { dimmedColor } from "@/app/utils/dimmedColor";
+import { getRange } from "@/app/utils/getRange";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
-import { lastDayOfMonth } from "date-fns";
 import { useEffect, useState } from "react";
 import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -39,18 +39,11 @@ interface PieGraphProps {
 
 const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth, selectedYear }: PieGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
-    // const year = 2024;
-    const startDate = selectedMonth ? `${selectedYear}-${selectedMonth}-01` : `${selectedYear}-01-01`;
-    const endDate = selectedMonth
-        ? `${selectedYear}-${selectedMonth}-${lastDayOfMonth(new Date(`${selectedYear}-${selectedMonth}-01`)).getDate()}`
-        : `${selectedYear}-12-31`;
-
-    console.log(startDate, endDate);
 
     const {
         data: { Categories: data },
     } = useSuspenseQuery<any>(getCategoriesQuery, {
-        variables: { range: { startDate, endDate } },
+        variables: { range: getRange(selectedMonth, selectedYear) },
     });
 
     const transformedData = data.map(({ name, total }: { name: string; total: number }) => {

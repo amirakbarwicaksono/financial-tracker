@@ -8,10 +8,11 @@ import deleteTransactionMutation from "@/app/graphql/deleteTransaction.graphql";
 import transactionsQuery from "@/app/graphql/getTransactions.graphql";
 import updateTransactionMutation from "@/app/graphql/updateTransaction.graphql";
 import { createRefetchQueries } from "@/app/utils/createRefetchQueries";
+import { getRange } from "@/app/utils/getRange";
 import { useMutation } from "@apollo/client";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 interface TransactionProps {
     selectedCategory: string | null;
@@ -41,12 +42,9 @@ export interface EditedItem {
 const Transactions = ({ selectedCategory, selectedMonth, selectedYear }: TransactionProps) => {
     const [editedItem, setEditedItem] = useState<Transaction | null>(null);
 
-    const startDate = `${selectedYear}-01-01`;
-    const endDate = `${selectedYear}-12-31`;
-    console.log(startDate, endDate);
     const {
         data: { Transactions: data },
-    } = useSuspenseQuery<any>(transactionsQuery, { variables: { range: { startDate, endDate } } });
+    } = useSuspenseQuery<any>(transactionsQuery, { variables: { range: getRange(selectedMonth, selectedYear) } });
 
     const [deleteItem, { loading: deleteLoading, error: deleteError }] = useMutation(deleteTransactionMutation, {
         refetchQueries: ({ data }) => createRefetchQueries(data),
@@ -56,20 +54,15 @@ const Transactions = ({ selectedCategory, selectedMonth, selectedYear }: Transac
         refetchQueries: ({ data }) => createRefetchQueries(data),
     });
 
-    const transformedData = useMemo(() => {
-        let filteredData = selectedCategory ? data.filter((transaction: Transaction) => transaction.category.name === selectedCategory) : data;
-        filteredData = selectedMonth
-            ? filteredData.filter((transaction: Transaction) => format(new Date(transaction.date), "MMM").toLowerCase() === selectedMonth.toLowerCase())
-            : filteredData;
-        filteredData = filteredData
-            .map((d: Transaction) => ({
-                ...d,
-                date: format(new Date(d.date), "dd-MMMM-yyyy"),
-            }))
-            .sort((a: { date: string | number | Date }, b: { date: string | number | Date }) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // const transformedData = useMemo(() => {
+    let transformedData = selectedCategory ? data.filter((transaction: Transaction) => transaction.category.name === selectedCategory) : data;
+    transformedData = transformedData.map((d: Transaction) => ({
+        ...d,
+        date: format(new Date(d.date), "dd-MMMM-yyyy"),
+    }));
 
-        return filteredData;
-    }, [data, selectedCategory, selectedMonth]);
+    //     return filteredData;
+    // }, [data, selectedCategory, selectedMonth]);
 
     if (deleteLoading || updateLoading) return "Loading...";
     if (deleteError || updateError) return `${deleteError ? deleteError.message : updateError ? updateError.message : "Error!"}`;

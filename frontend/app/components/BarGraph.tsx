@@ -1,11 +1,11 @@
 "use client";
 
+import query from "@/app/graphql/getTransactions.graphql";
 import { dimmedColor } from "@/app/utils/dimmedColor";
+import { getRange } from "@/app/utils/getRange";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-import query from "@/app/graphql/getTransactions.graphql";
 
 type DataPoint = {
     month: string;
@@ -37,15 +37,12 @@ interface BarGraphProps {
 }
 
 const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphProps) => {
-    const [activeIndex, setActiveIndex] = useState(-1);
+    const [activeIndex, setActiveIndex] = useState(2);
     const [hoverIndex, setHoverIndex] = useState(-1);
-
-    const startDate = `${selectedYear}-01-01`;
-    const endDate = `${selectedYear}-12-31`;
 
     const {
         data: { Transactions: data },
-    } = useSuspenseQuery<any>(query, { variables: { range: { startDate, endDate } } });
+    } = useSuspenseQuery<any>(query, { variables: { range: getRange(null, selectedYear) } });
 
     // Step 1: Parse the input data
     const parsedData = data.map(({ date, amount }: { date: string; amount: number }) => ({
@@ -54,16 +51,19 @@ const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphPro
     }));
 
     // Step 2: Group the data by month
+
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const accumulator: { [key: string]: number } = {};
+    months.forEach((month) => (accumulator[month] = 0));
+
     const groupedData = parsedData.reduce((acc: { [x: string]: any }, entry: { month: any; amount: any }) => {
         const { month, amount } = entry;
         acc[month] = (acc[month] || 0) + amount;
         return acc;
-    }, {});
+    }, accumulator);
 
     // Step 3: Transform the grouped data into the desired format
-    const resultData = Object.keys(groupedData)
-        .map((month) => ({ month, amount: groupedData[month] }))
-        .sort((a, b) => new Date(`2000-${a.month}-01`)!.getTime() - new Date(`2000-${b.month}-01`)!.getTime());
+    const resultData = Object.keys(groupedData).map((month) => ({ month, amount: groupedData[month] }));
 
     return (
         <ResponsiveContainer

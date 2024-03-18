@@ -13,7 +13,7 @@ import { useState } from "react";
 export default function Home() {
     const [tab, setTab] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+    const [selectedMonth, setSelectedMonth] = useState<string | null>("MAR");
     const [selectedYear, setSelectedYear] = useState<number>(2024);
 
     return (

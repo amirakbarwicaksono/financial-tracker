@@ -156,10 +156,12 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 	}
 
 	query := r.DB.Where("user_id = ?", userId)
-	fmt.Print(rangeArg)
+
 	if rangeArg != nil {
 		query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
 	}
+
+	query = query.Order("date DESC")
 
 	if err := query.Find(&transactions).Error; err != nil {
 		return nil, err
@@ -203,7 +205,7 @@ func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
 	var years []*int
 
 	// Execute the SQL query using gorm
-	rows, err := r.DB.Raw("SELECT DISTINCT extract(YEAR FROM DATE) AS year FROM transactions").Rows()
+	rows, err := r.DB.Raw("SELECT DISTINCT extract(YEAR FROM DATE) AS year FROM transactions ORDER BY year DESC").Rows()
 	if err != nil {
 		return nil, err
 	}
