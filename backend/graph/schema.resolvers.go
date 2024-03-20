@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/aashish47/finance-tracker/backend/graph/model"
 	"github.com/aashish47/finance-tracker/backend/middleware"
@@ -224,6 +225,24 @@ func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
 	}
 
 	return years, nil
+}
+
+// LastDate is the resolver for the LastDate field.
+func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
+	transaction := &model.Transaction{}
+	var lastDate time.Time
+
+	// Execute SQL query to retrieve the highest date
+	if err := r.DB.Model(transaction).Select("MAX(date)").Scan(&lastDate).Error; err != nil {
+		return nil, err
+	}
+	// Format the date as desired
+	formattedDate := lastDate.Format("2006-01-02T15:04:05-0700")
+
+	// Convert the formatted date to a string pointer
+	result := &formattedDate
+
+	return result, nil
 }
 
 // Category is the resolver for the category field.

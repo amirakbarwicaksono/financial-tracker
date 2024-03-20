@@ -21,6 +21,7 @@ type Query {
     Categories: [Category]
     Category(id: ID!): Category
     Years: [Int]
+    LastDate: String
 }
 
 type Mutation {

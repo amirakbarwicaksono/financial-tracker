@@ -37,7 +37,9 @@ interface BarGraphProps {
 }
 
 const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphProps) => {
-    const [activeIndex, setActiveIndex] = useState(2);
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const index = selectedMonth ? months.indexOf(selectedMonth) : -1;
+    const [activeIndex, setActiveIndex] = useState(index);
     const [hoverIndex, setHoverIndex] = useState(-1);
 
     const {
@@ -52,7 +54,6 @@ const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphPro
 
     // Step 2: Group the data by month
 
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const accumulator: { [key: string]: number } = {};
     months.forEach((month) => (accumulator[month] = 0));
 
