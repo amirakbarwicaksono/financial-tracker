@@ -9,9 +9,8 @@ import Tabs from "@/app/components/Tabs";
 import TransactionForm from "@/app/components/TransactionForm";
 import Transactions from "@/app/components/Transactions";
 import getLastDate from "@/app/graphql/getLastDate.graphql";
+import { getMonthAndYear } from "@/app/utils/getMonthAndYear";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
-import { format, getYear } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { useState } from "react";
 
 export default function Home() {
@@ -19,14 +18,15 @@ export default function Home() {
         data: { LastDate },
     } = useSuspenseQuery<any>(getLastDate);
 
-    const lastDate = new Date(LastDate);
-    const lastYear = getYear(lastDate);
-    const lastMonth = format(lastDate, "MMM", { locale: enUS }).toUpperCase();
+    // const lastDate = new Date(LastDate);
+    // const lastYear = getYear(lastDate);
+    // const lastMonth = format(lastDate, "MMM", { locale: enUS }).toUpperCase();
 
+    const { month: lastMonth, year: lastYear } = getMonthAndYear(LastDate);
     const [tab, setTab] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedMonth, setSelectedMonth] = useState<string | null>(lastMonth);
-    const [selectedYear, setSelectedYear] = useState<number>(lastYear);
+    const [selectedYear, setSelectedYear] = useState<number>(lastYear!);
 
     return (
         <div className="bg-purple-950  flex flex-col-reverse md:flex-row h-screen">

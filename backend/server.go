@@ -5,12 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/aashish47/finance-tracker/backend/middleware"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/aashish47/finance-tracker/backend/config"
-	"github.com/aashish47/finance-tracker/backend/graph"
+	"github.com/aashish47/finance-tracker/backend/graphql"
+	"github.com/aashish47/finance-tracker/backend/middleware"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
 )
@@ -21,7 +20,7 @@ func main() {
 
 	db := config.InitDB()
 
-	resolver := graph.NewResolver(db)
+	resolver := graphql.NewResolver(db)
 
 	port := os.Getenv("PORT")
 	origin := "https://fintrack-1scr.onrender.com"
@@ -32,7 +31,7 @@ func main() {
 		origin = "http://localhost:3000"
 	}
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
+	srv := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{Resolvers: resolver}))
 
 	// Enable CORS
 	authMiddleware := middleware.AuthMiddleware(srv)

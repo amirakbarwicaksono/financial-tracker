@@ -51,7 +51,7 @@ const Transactions = ({ selectedCategory, selectedMonth, selectedYear }: Transac
     });
 
     const [updateItem, { loading: updateLoading, error: updateError }] = useMutation(updateTransactionMutation, {
-        refetchQueries: ({ data }) => createRefetchQueries(data),
+        refetchQueries: ({ data }) => createRefetchQueries(data, editedItem?.date),
     });
 
     // const transformedData = useMemo(() => {
