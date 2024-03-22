@@ -18,10 +18,6 @@ export default function Home() {
         data: { LastDate },
     } = useSuspenseQuery<any>(getLastDate);
 
-    // const lastDate = new Date(LastDate);
-    // const lastYear = getYear(lastDate);
-    // const lastMonth = format(lastDate, "MMM", { locale: enUS }).toUpperCase();
-
     const { month: lastMonth, year: lastYear } = getMonthAndYear(LastDate);
     const [tab, setTab] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

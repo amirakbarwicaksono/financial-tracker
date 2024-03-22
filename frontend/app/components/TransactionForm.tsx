@@ -5,8 +5,6 @@ import categoriesQuery from "@/app/graphql/getCategories.graphql";
 import { createRefetchQueries } from "@/app/utils/createRefetchQueries";
 import { useMutation, useSuspenseQuery } from "@apollo/client";
 import { useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 const TransactionForm = () => {
     const [formData, setFormData] = useState({
@@ -57,21 +55,26 @@ const TransactionForm = () => {
                 className="flex flex-col h-full gap-2"
             >
                 <Input
+                    type="text"
                     placeholder="Item"
                     value={formData.item}
                     onChange={(e) => setFormData({ ...formData, item: e.target.value })}
+                    required
                 />
+
                 <Input
+                    type="number"
                     placeholder="Amount"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    required
                 />
-
                 <select
                     defaultValue=""
                     id="categories"
                     className=" focus:border-fuchsia-600 hover:cursor-pointer bg-white bg-opacity-5 py-[9px] px-1 rounded-lg text-neutral-200 w-full outline-none border-thin min-w-[100px] "
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    required
                 >
                     <option
                         value=""
@@ -90,13 +93,12 @@ const TransactionForm = () => {
                         </option>
                     ))}
                 </select>
-
-                <DatePicker
-                    placeholderText="Date"
-                    selected={formData.date ? new Date(formData.date) : null}
-                    onChange={(date: Date) => setFormData({ ...formData, date: date?.toISOString() })}
-                    dateFormat="yyyy-MM-dd"
-                    className="hover:cursor-pointer w-full focus:border-fuchsia-600 bubble outline-none border-thin min-w-[100px]"
+                <Input
+                    type="date"
+                    placeholder="Date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
                 />
                 <div className="flex-grow" />
                 <Button name="add" />

@@ -2,9 +2,8 @@ import EditInput from "@/app/components/EditInput";
 import { EditedItem, Transaction } from "@/app/components/Transactions";
 import categoriesQuery from "@/app/graphql/getCategories.graphql";
 import { useSuspenseQuery } from "@apollo/client";
+import { format } from "date-fns";
 import React, { useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 interface EditPopupProps {
     transaction: Transaction;
@@ -18,7 +17,7 @@ const EditPopup: React.FC<EditPopupProps> = ({ transaction, onUpdate, onClose })
         item: transaction.item,
         amount: transaction.amount,
         categoryID: transaction.category.id,
-        date: transaction.date,
+        date: format(new Date(transaction.date), "yyyy-MM-dd"),
     });
     const {
         data: { Categories: categories },
@@ -38,20 +37,18 @@ const EditPopup: React.FC<EditPopupProps> = ({ transaction, onUpdate, onClose })
             <div className="bg-white p-4 rounded-lg shadow-md w-96">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-700 text-center">Edit Transaction</h2>
 
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-600">Date:</label>
-
-                    <DatePicker
-                        selected={new Date(editedItem.date)}
-                        onChange={(date: Date) => handleInputChange("date", date.toISOString())}
-                        dateFormat="yyyy-MM-dd"
-                        className="border hover:cursor-pointer rounded-md p-2 w-full text-gray-600 focus:outline-purple-700"
-                    />
-                </div>
+                <EditInput
+                    label="Date"
+                    type="date"
+                    required
+                    value={editedItem.date}
+                    onChange={(value) => handleInputChange("date", value)}
+                />
 
                 <EditInput
                     label="Item"
                     type="text"
+                    required
                     value={editedItem.item}
                     onChange={(value) => handleInputChange("item", value)}
                 />
@@ -79,7 +76,8 @@ const EditPopup: React.FC<EditPopupProps> = ({ transaction, onUpdate, onClose })
 
                 <EditInput
                     label="Amount"
-                    type="text"
+                    type="number"
+                    required
                     value={editedItem.amount}
                     onChange={(value) => handleInputChange("amount", Number(value))}
                 />
