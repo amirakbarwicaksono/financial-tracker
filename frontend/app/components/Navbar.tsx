@@ -22,15 +22,16 @@ const Navbar = ({ selectedYear, setSelectedYear }: NavbarProps) => {
                 className="focus:border-fuchsia-600 hover:cursor-pointer bg-white bg-opacity-5 py-[9px] px-1 rounded-lg text-neutral-200 outline-none border-thin min-w-[100px] "
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
             >
-                {Years.map((year: number) => (
-                    <option
-                        key={year}
-                        value={year}
-                        className=" bg-black font-extralight text-neutral-200"
-                    >
-                        {year}
-                    </option>
-                ))}
+                {Years &&
+                    Years.map((year: number) => (
+                        <option
+                            key={year}
+                            value={year}
+                            className=" bg-black font-extralight text-neutral-200"
+                        >
+                            {year}
+                        </option>
+                    ))}
             </select>
             <p className=" md:text-xl md:font-semibold  text-center">Dashboard</p>
             <div className="flex items-center justify-end gap-2 md:gap-4 md:text-lg ">

@@ -18,13 +18,25 @@ import (
 
 // Transactions is the resolver for the transactions field.
 func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+
 	transactions := []*model.Transaction{}
-	query := r.DB.Where("category_id = ?", obj.ID)
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
+	query := r.DB.Where("category_id = ? AND user_id = ?", obj.ID, userId)
 
 	if rangeArg != nil {
-		query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
-
+		query = query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
 	}
+
 	if err := query.Find(&transactions).Error; err != nil {
 		return nil, err
 	}
@@ -34,9 +46,19 @@ func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category
 
 // Total is the resolver for the total field.
 func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) (*float64, error) {
-	var total sql.NullFloat64
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("failed to retrieve claims from context")
+	}
 
-	query := r.DB.Model(&model.Transaction{}).Select("COALESCE(SUM(amount), 0)").Where("category_id = ?", obj.ID)
+	var total sql.NullFloat64
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
+	query := r.DB.Model(&model.Transaction{}).Select("COALESCE(SUM(amount), 0)").Where("category_id = ? AND user_id = ?", obj.ID, userId)
 
 	if rangeArg != nil {
 		query = query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
@@ -47,7 +69,6 @@ func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, range
 	}
 
 	if !total.Valid {
-		// Handle case where the sum is NULL (no transactions found)
 		return nil, nil
 	}
 
@@ -59,8 +80,6 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Tr
 	key := middleware.ContextKeyClaims
 	claims, ok := ctx.Value(key).(jwt.MapClaims)
 	if !ok {
-		// Handle error: failed to retrieve claims from context
-		// This could happen if the key or type is incorrect
 		return nil, errors.New("failed to retrieve claims from context")
 	}
 
@@ -75,8 +94,7 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Tr
 	}
 
 	newTransaction := &model.Transaction{
-		Item: input.Item,
-		// Category:   category,
+		Item:       input.Item,
 		CategoryID: input.CategoryID,
 		IsIncome:   input.IsIncome,
 		Date:       input.Date,
@@ -143,12 +161,8 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 	key := middleware.ContextKeyClaims
 	claims, ok := ctx.Value(key).(jwt.MapClaims)
 	if !ok {
-		// Handle error: failed to retrieve claims from context
-		// This could happen if the key or type is incorrect
 		return nil, errors.New("failed to retrieve claims from context")
 	}
-
-	// Now you can access the claims and perform authentication and authorization checks
 
 	transactions := []*model.Transaction{}
 	userId, ok := claims["sub"].(string)
@@ -173,8 +187,20 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 
 // Transaction is the resolver for the Transaction field.
 func (r *queryResolver) Transaction(ctx context.Context, id int) (*model.Transaction, error) {
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+
 	transaction := model.Transaction{}
-	if err := r.DB.First(&transaction, id).Error; err != nil {
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
+	// Query the transaction ensuring it belongs to the authenticated user
+	if err := r.DB.Where("id = ? AND user_id = ?", id, userId).First(&transaction).Error; err != nil {
 		return nil, err
 	}
 
@@ -204,15 +230,23 @@ func (r *queryResolver) Category(ctx context.Context, id int) (*model.Category, 
 // Years is the resolver for the Years field.
 func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
 	var years []*int
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("failed to retrieve claims from context")
+	}
 
-	// Execute the SQL query using gorm
-	rows, err := r.DB.Raw("SELECT DISTINCT extract(YEAR FROM DATE) AS year FROM transactions ORDER BY year DESC").Rows()
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
+	rows, err := r.DB.Raw("SELECT DISTINCT extract(YEAR FROM DATE) AS year FROM transactions WHERE user_id = ? ORDER BY year DESC", userId).Rows()
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	// Iterate over the result set and extract years
 	for rows.Next() {
 		var year int
 		if err := rows.Scan(&year); err != nil {
@@ -229,17 +263,30 @@ func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
 
 // LastDate is the resolver for the LastDate field.
 func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
 	transaction := &model.Transaction{}
 	var lastDate time.Time
 
-	// Execute SQL query to retrieve the highest date
-	if err := r.DB.Model(transaction).Select("MAX(date)").Scan(&lastDate).Error; err != nil {
+	if err := r.DB.Model(&transaction).Where("user_id = ?", userId).Order("date DESC").Limit(1).Pluck("date", &lastDate).Error; err != nil {
 		return nil, err
 	}
-	// Format the date as desired
+
+	if lastDate.IsZero() {
+		return nil, nil
+	}
+
 	formattedDate := lastDate.Format("2006-01-02T15:04:05-0700")
 
-	// Convert the formatted date to a string pointer
 	result := &formattedDate
 
 	return result, nil

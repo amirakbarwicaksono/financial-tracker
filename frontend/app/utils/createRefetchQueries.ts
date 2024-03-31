@@ -1,4 +1,5 @@
 import getCategoriesQuery from "@/app/graphql/getCategories.graphql";
+import getLastDate from "@/app/graphql/getLastDate.graphql";
 import transactionsQuery from "@/app/graphql/getTransactions.graphql";
 import getYears from "@/app/graphql/getYears.graphql";
 import { getMonthAndYear } from "@/app/utils/getMonthAndYear";
@@ -17,6 +18,7 @@ export const createRefetchQueries = (data: any, previousDate?: string) => {
         { query: getCategoriesQuery, variables: { range: rangeMonth } },
         { query: getCategoriesQuery, variables: { range: rangeYear } },
         { query: getYears },
+        { query: getLastDate },
     ];
 
     if (previousDate) {

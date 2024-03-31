@@ -11,18 +11,32 @@ import Transactions from "@/app/components/Transactions";
 import getLastDate from "@/app/graphql/getLastDate.graphql";
 import { getMonthAndYear } from "@/app/utils/getMonthAndYear";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
     const {
         data: { LastDate },
     } = useSuspenseQuery<any>(getLastDate);
 
-    const { month: lastMonth, year: lastYear } = getMonthAndYear(LastDate);
+    let { month: lastMonth, year: lastYear } = getMonthAndYear(LastDate);
+    if (!lastYear) {
+        lastYear = 1;
+    }
+
     const [tab, setTab] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedMonth, setSelectedMonth] = useState<string | null>(lastMonth);
     const [selectedYear, setSelectedYear] = useState<number>(lastYear!);
+
+    useEffect(() => {
+        console.log(lastYear);
+        if (lastYear && selectedYear === 1) {
+            setSelectedYear(lastYear);
+        }
+        if (lastYear === 1) {
+            setSelectedYear(1);
+        }
+    }, [lastYear]);
 
     return (
         <div className="bg-purple-950  flex flex-col-reverse md:flex-row h-screen">
