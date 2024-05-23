@@ -34,7 +34,7 @@ const Login = () => {
         return <div>Loading...</div>;
     }
     return (
-        <div className="bg-neutral-950 flex justify-center items-center h-screen p-2">
+        <div className="bg-neutral-950 flex justify-center items-center h-screen min-h-[600px] p-2">
             {!session && (
                 <div className="w-full sm:w-2/3 md:w-1/2 lg:w-1/3 xl:w-1/4">
                     <Auth
