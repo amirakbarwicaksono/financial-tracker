@@ -29,7 +29,6 @@ export default function Home() {
     const [selectedYear, setSelectedYear] = useState<number>(lastYear!);
 
     useEffect(() => {
-        console.log(lastYear);
         if (lastYear && selectedYear === 1) {
             setSelectedYear(lastYear);
         }
@@ -39,7 +38,7 @@ export default function Home() {
     }, [lastYear]);
 
     return (
-        <div className="bg-purple-950  flex flex-col-reverse md:flex-row h-screen">
+        <div className="bg-purple-950  flex flex-col-reverse md:flex-row h-screen min-h-[600px]">
             <Sidebar />
             <div className="w-full  flex flex-col p-2 flex-grow gap-2">
                 <Navbar

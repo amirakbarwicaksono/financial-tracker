@@ -42,6 +42,7 @@ const Login = () => {
                         appearance={{ theme: ThemeSupa }}
                         theme="dark"
                         providers={["google"]}
+                        redirectTo={process.env.NEXT_PUBLIC_REDIRECT_URL}
                     />
                 </div>
             )}

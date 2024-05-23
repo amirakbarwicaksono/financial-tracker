@@ -94,7 +94,7 @@ const TransactionForm = () => {
                     ))}
                 </select>
                 <Input
-                    type="date"
+                    type="text"
                     placeholder="Date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}

@@ -10,10 +10,6 @@
     @apply bubble hover:bg-opacity-10;
 }
 
-body {
-    @apply overflow-hidden;
-}
-
 .border-thin {
     @apply border border-white border-opacity-10;
 }
