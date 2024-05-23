@@ -4,7 +4,7 @@ import Notification from "@/app/Icons/Notification";
 import Settings from "@/app/Icons/Settings";
 import Star from "@/app/Icons/Star";
 import IconButton from "@/app/components/IconButton";
-import { supabase } from "@/app/login/config";
+import { supabase } from "@/app/utils/supabase/config";
 import { useRouter } from "next/navigation";
 
 const Sidebar = () => {

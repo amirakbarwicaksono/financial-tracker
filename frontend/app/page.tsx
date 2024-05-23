@@ -1,10 +1,10 @@
 "use client";
 
+import Home from "@/app/components/Home";
+import Login from "@/app/components/Login";
+import { supabase } from "@/app/utils/supabase/config";
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import Home from "./components/Home";
-import Welcome from "./components/Welcome";
-import { supabase } from "./login/config";
 
 export default function Main() {
     const [session, setSession] = useState<Session | null>(null);
@@ -27,5 +27,5 @@ export default function Main() {
     if (loading) {
         return <div>Loading...</div>;
     }
-    return session ? <Home /> : <Welcome />;
+    return session ? <Home /> : <Login />;
 }

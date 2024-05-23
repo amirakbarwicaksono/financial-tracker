@@ -1,12 +1,12 @@
 "use client";
 
+import { supabase } from "@/app/utils/supabase/config";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Session } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 // import { createClient } from "../utils/supabase/client";
-import { supabase } from "./config";
 
 const Login = () => {
     const [session, setSession] = useState<Session | null>(null);
