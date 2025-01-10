@@ -1,8 +1,7 @@
-import { format, getYear } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { getMonth, getYear } from "date-fns";
 
 interface MonthAndYear {
-    month: string | null;
+    month: number | null;
     year: number | null;
 }
 
@@ -13,7 +12,7 @@ export const getMonthAndYear = (dateString?: string): MonthAndYear => {
 
     const date = new Date(dateString);
     return {
-        month: format(date, "MMM", { locale: enUS }).toUpperCase(),
+        month: getMonth(date),
         year: getYear(date),
     };
 };

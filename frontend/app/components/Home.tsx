@@ -25,7 +25,7 @@ export default function Home() {
 
     const [tab, setTab] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [selectedMonth, setSelectedMonth] = useState<string | null>(lastMonth);
+    const [selectedMonth, setSelectedMonth] = useState<number | undefined>(lastMonth!);
     const [selectedYear, setSelectedYear] = useState<number>(lastYear!);
 
     useEffect(() => {
@@ -38,7 +38,7 @@ export default function Home() {
     }, [lastYear]);
 
     return (
-        <div className="bg-purple-950  flex flex-col-reverse md:flex-row h-screen min-h-[600px]">
+        <div className=" flex flex-col-reverse md:flex-row h-screen min-h-[600px]">
             <Sidebar />
             <div className="w-full  flex flex-col p-2 flex-grow gap-2">
                 <Navbar

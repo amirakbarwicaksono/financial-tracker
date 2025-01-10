@@ -1,59 +1,32 @@
 "use client";
 
 import query from "@/app/graphql/getTransactions.graphql";
-import { dimmedColor } from "@/app/utils/dimmedColor";
 import { getRange } from "@/app/utils/getRange";
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
-import { useState } from "react";
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-type DataPoint = {
-    month: string;
-    amount: number;
-};
-
-const CustomTooltip: React.FC<{
-    active?: boolean;
-    payload?: Array<{ payload: DataPoint }>;
-    label?: string;
-}> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-        const data = payload[0].payload;
-        return (
-            <div className="tooltip">
-                <p>{`Month: ${label}`}</p>
-                <p>{`Amount: ${data.amount}`}</p>
-            </div>
-        );
-    }
-
-    return null;
-};
+import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from "recharts";
 
 interface BarGraphProps {
-    selectedMonth: string | null;
-    setSelectedMonth: React.Dispatch<React.SetStateAction<string | null>>;
+    selectedMonth: number | undefined;
+    setSelectedMonth: React.Dispatch<React.SetStateAction<number | undefined>>;
     selectedYear: number;
 }
 
 const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphProps) => {
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-    const index = selectedMonth ? months.indexOf(selectedMonth) : -1;
-    const [activeIndex, setActiveIndex] = useState(index);
-    const [hoverIndex, setHoverIndex] = useState(-1);
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     const {
         data: { Transactions: data },
-    } = useSuspenseQuery<any>(query, { variables: { range: getRange(null, selectedYear) } });
+    } = useSuspenseQuery<any>(query, { variables: { range: getRange(undefined, selectedYear) } });
 
     // Step 1: Parse the input data
     const parsedData = data.map(({ date, amount }: { date: string; amount: number }) => ({
-        month: new Date(date).toLocaleString("en-US", { month: "short" }).toUpperCase(),
+        month: new Date(date).toLocaleString("en-US", { month: "long" }),
         amount,
     }));
 
     // Step 2: Group the data by month
-
     const accumulator: { [key: string]: number } = {};
     months.forEach((month) => (accumulator[month] = 0));
 
@@ -66,48 +39,57 @@ const BarGraph = ({ selectedMonth, setSelectedMonth, selectedYear }: BarGraphPro
     // Step 3: Transform the grouped data into the desired format
     const resultData = Object.keys(groupedData).map((month) => ({ month, amount: groupedData[month] }));
 
+    const chartConfig = { amount: { label: "Amount" } } satisfies ChartConfig;
+
+    const chartColor = "hsl(var(--primary))";
+
     return (
-        <ResponsiveContainer
-            width="100%"
-            height="100%"
+        <ChartContainer
+            config={chartConfig}
+            className="h-full w-full"
         >
-            <BarChart data={resultData}>
+            <BarChart
+                accessibilityLayer
+                data={resultData}
+            >
+                <CartesianGrid vertical={false} />
                 <XAxis
                     dataKey="month"
-                    stroke="currentColor"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    tickFormatter={(value) => value.slice(0, 3)}
                 />
-                <YAxis stroke="currentColor" />
-                <Tooltip
+
+                <ChartTooltip
                     cursor={false}
-                    content={<CustomTooltip />}
+                    content={<ChartTooltipContent indicator="line" />}
                 />
+
                 <Bar
-                    onMouseOver={(_, index) => setHoverIndex(index)}
-                    onMouseOut={(_, index) => setHoverIndex(-1)}
                     onClick={(_, index) => {
-                        const month = resultData[index]?.month;
-                        if (selectedMonth !== month) {
-                            setSelectedMonth(month);
+                        if (selectedMonth !== index) {
+                            setSelectedMonth(index);
                         } else {
-                            setSelectedMonth(null);
+                            setSelectedMonth(undefined);
                         }
-                        setActiveIndex(activeIndex === index ? -1 : index);
+                    }}
+                    activeIndex={selectedMonth}
+                    className="hover:cursor-pointer"
+                    activeBar={({ ...props }) => {
+                        return (
+                            <Rectangle
+                                {...props}
+                                className={cn(props.index === selectedMonth && "drop-shadow-[0_0_5px_hsl(var(--primary))]")}
+                            />
+                        );
                     }}
                     dataKey="amount"
-                >
-                    {resultData.map((_, index) => (
-                        <Cell
-                            className="hover:stroke-neutral-200 stroke-none cursor-pointer"
-                            style={{
-                                filter: index === activeIndex ? `drop-shadow(0px 0px 5px #ec4899` : "none",
-                            }}
-                            key={`cell-${index}`}
-                            fill={index === activeIndex ? "#ec4899" : dimmedColor("#ec4899")}
-                        />
-                    ))}
-                </Bar>
+                    radius={[8, 8, 0, 0]}
+                    fill={chartColor}
+                />
             </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
     );
 };
 

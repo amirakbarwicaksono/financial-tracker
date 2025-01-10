@@ -1,53 +1,29 @@
 "use client";
 
 import getCategoriesQuery from "@/app/graphql/getCategories.graphql";
-import { dimmedColor } from "@/app/utils/dimmedColor";
 import { getRange } from "@/app/utils/getRange";
+import { ChartConfig, ChartContainer, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
 import { useEffect, useState } from "react";
-import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-
-type DataPoint = {
-    name: string;
-    value: number;
-};
-
-const CustomTooltip: React.FC<{
-    active?: boolean;
-    payload?: Array<{ payload: DataPoint }>;
-    label?: string;
-}> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-        const data = payload[0].payload;
-        return (
-            <div className="tooltip">
-                <p>{`Category: ${data.name}`}</p>
-                <p>{`Amount: ${data.value}`}</p>
-            </div>
-        );
-    }
-
-    return null;
-};
+import { Label, Legend, Pie, PieChart, Sector } from "recharts";
+import { PieSectorDataItem } from "recharts/types/polar/Pie";
 
 interface PieGraphProps {
     selectedCategory: string | null;
     setSelectedCategory: React.Dispatch<React.SetStateAction<string | null>>;
-    selectedMonth: string | null;
+    selectedMonth: number | undefined;
     selectedYear: number;
 }
 
 const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth, selectedYear }: PieGraphProps) => {
     const [activeIndex, setActiveIndex] = useState(-1);
-
     const {
         data: { Categories: data },
     } = useSuspenseQuery<any>(getCategoriesQuery, {
         variables: { range: getRange(selectedMonth, selectedYear) },
     });
-
     const transformedData = data.map(({ name, total }: { name: string; total: number }) => {
-        return { name, value: total };
+        return { category: name, amount: total, fill: `var(--color-${name})` };
     });
 
     const [total, setTotal] = useState(0);
@@ -79,39 +55,43 @@ const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth, select
         "#ffffff",
     ];
 
-    const calculateColor = (index: number) => {
-        const originalColor = COLORS[index % COLORS.length];
-        if (index === activeIndex) {
-            return originalColor;
-        }
-        return dimmedColor(originalColor);
-    };
+    const chartConfig = transformedData.reduce((acc: any, data: any, index: any) => {
+        const category = data.category;
+        acc[category] = {
+            label: category,
+            color: COLORS[index % COLORS.length],
+        };
+        return acc;
+    }, {}) satisfies ChartConfig;
+
+    chartConfig["amount"] = { label: "Amount" };
 
     return (
-        <ResponsiveContainer
-            width="100%"
-            height="100%"
+        <ChartContainer
+            config={chartConfig}
+            className="w-full h-full"
         >
             <PieChart>
-                <Tooltip content={<CustomTooltip />} />
+                <ChartTooltip
+                    cursor={false}
+                    content={
+                        <ChartTooltipContent
+                            nameKey="amount"
+                            labelKey="category"
+                        />
+                    }
+                />
+
                 <Legend
+                    className="flex-wrap justify-start gap-2 sm:gap-4"
                     layout="horizontal"
                     align="left"
                     verticalAlign="middle"
-                    iconType="line"
+                    content={<ChartLegendContent nameKey="category" />}
                 />
                 <Pie
-                    minAngle={10}
-                    data={transformedData}
-                    cx={"50%"}
-                    cy={"50%"}
-                    innerRadius={"65%"}
-                    outerRadius={"85%"}
-                    fill="#888a2s"
-                    paddingAngle={0}
-                    dataKey="value"
                     onClick={(_, index) => {
-                        const categoryID = transformedData[index]?.name;
+                        const categoryID = transformedData[index]?.category;
                         if (selectedCategory !== categoryID) {
                             setSelectedCategory(categoryID);
                         } else {
@@ -119,26 +99,57 @@ const PieGraph = ({ selectedCategory, setSelectedCategory, selectedMonth, select
                         }
                         setActiveIndex(activeIndex === index ? -1 : index);
                     }}
+                    className="hover:cursor-pointer"
+                    activeIndex={activeIndex}
+                    data={transformedData}
+                    dataKey="amount"
+                    minAngle={10}
+                    innerRadius={60}
+                    // outerRadius={90}
+                    activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => {
+                        return (
+                            <Sector
+                                {...props}
+                                outerRadius={outerRadius + 10}
+                                style={{
+                                    filter: `drop-shadow(0px 0px 5px ${props.fill}`,
+                                }}
+                            />
+                        );
+                    }}
                 >
-                    {transformedData.map((_: any, index: number) => (
-                        <Cell
-                            className={`hover:stroke-neutral-200 stroke-none  outline-none cursor-pointer`}
-                            style={{
-                                filter: index === activeIndex ? `drop-shadow(0px 0px 5px ${COLORS[index % COLORS.length]}` : "none",
-                            }}
-                            key={`cell-${index}`}
-                            fill={calculateColor(index)}
-                        />
-                    ))}
-
                     <Label
-                        fill="#e5e5e5"
-                        value={selectedCategory ? data.find((cat: { name: string }) => cat.name === selectedCategory)?.total : total}
-                        position="center"
+                        content={({ viewBox }) => {
+                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                return (
+                                    <text
+                                        x={viewBox.cx}
+                                        y={viewBox.cy}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                    >
+                                        <tspan
+                                            x={viewBox.cx}
+                                            y={viewBox.cy}
+                                            className="fill-foreground text-3xl font-bold"
+                                        >
+                                            {selectedCategory ? data.find((cat: { name: string }) => cat.name === selectedCategory)?.total : total}
+                                        </tspan>
+                                        <tspan
+                                            x={viewBox.cx}
+                                            y={(viewBox.cy || 0) + 24}
+                                            className="fill-muted-foreground"
+                                        >
+                                            Total
+                                        </tspan>
+                                    </text>
+                                );
+                            }
+                        }}
                     />
                 </Pie>
             </PieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
     );
 };
 

@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 const Sidebar = () => {
     const router = useRouter();
     return (
-        <div className="flex h-12 w-screen md:h-full md:w-12 text-white md:flex-col justify-around items-center gap-8  md:rounded-r-3xl bg-neutral-900 p-4 md:px-3 md:py-20">
+        <div className="flex border h-12 w-screen md:h-full md:w-12  md:flex-col justify-around items-center gap-8  md:rounded-r-3xl p-4 md:px-3 md:py-20">
             <IconButton>
                 <Home />
             </IconButton>

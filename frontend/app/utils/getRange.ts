@@ -1,7 +1,7 @@
 import { lastDayOfMonth } from "date-fns";
 
-export const getRange = (month: String | null, year: number) => {
-    const startDate = month ? `${year}-${month}-01` : `${year}-JAN-01`;
-    const endDate = month ? `${year}-${month}-${lastDayOfMonth(new Date(`${year}-${month}-01`)).getDate()}` : `${year}-DEC-31`;
+export const getRange = (month: number | undefined, year: number) => {
+    const startDate = month !== undefined ? `${year}-${month + 1}-01` : `${year}-01-01`;
+    const endDate = month !== undefined ? `${year}-${month + 1}-${lastDayOfMonth(new Date(`${year}-${month + 1}-01`)).getDate()}` : `${year}-12-31`;
     return { startDate, endDate };
 };

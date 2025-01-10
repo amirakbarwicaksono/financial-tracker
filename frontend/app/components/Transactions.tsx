@@ -16,7 +16,7 @@ import { useState } from "react";
 
 interface TransactionProps {
     selectedCategory: string | null;
-    selectedMonth: string | null;
+    selectedMonth: number | undefined;
     selectedYear: number;
 }
 
