@@ -1,0 +1,7 @@
+query ($range: RangeInput) {
+	Categories {
+		id
+		name
+		total(range: $range)
+	}
+}

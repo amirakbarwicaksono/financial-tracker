@@ -1,0 +1,12 @@
+mutation ($input: TransactionInput!) {
+	createTransaction(input: $input) {
+		id
+		item
+		date
+		amount
+		category {
+			id
+			name
+		}
+	}
+}

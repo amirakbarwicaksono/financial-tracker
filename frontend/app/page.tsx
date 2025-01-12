@@ -1,31 +1,15 @@
-"use client";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
-import Home from "@/app/components/Home";
-import Login from "@/app/components/Login";
-import { supabase } from "@/app/utils/supabase/config";
-import { Session } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+const Home = async () => {
+	const supabase = await createClient();
+	const { data, error } = await supabase.auth.getUser();
 
-export default function Main() {
-    const [session, setSession] = useState<Session | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
+	if (error || !data?.user) {
+		redirect("/login");
+	} else {
+		redirect("/home");
+	}
+};
 
-    useEffect(() => {
-        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            localStorage.setItem("access_token", session?.access_token ?? "");
-            localStorage.setItem("refresh_token", session?.refresh_token ?? "");
-            localStorage.setItem("user", JSON.stringify(session?.user) ?? "");
-            setSession(session);
-            setLoading(false);
-        });
-
-        return () => {
-            authListener?.subscription.unsubscribe();
-        };
-    }, []);
-
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-    return session ? <Home /> : <Login />;
-}
+export default Home;
