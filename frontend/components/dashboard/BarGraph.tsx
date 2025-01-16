@@ -108,7 +108,7 @@ const BarGraph = ({
 								{...props}
 								className={cn(
 									props.index === selectedMonth &&
-										"drop-shadow-[0_0_5px_hsl(var(--primary))]",
+										"fill-chart-4 drop-shadow-[0_0_5px_hsl(var(--chart-4))]",
 								)}
 							/>
 						);

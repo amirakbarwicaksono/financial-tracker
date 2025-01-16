@@ -7,9 +7,12 @@ import PieGraph from "@/components/dashboard/PieGraph";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Tabs from "@/components/dashboard/Tabs";
 import TransactionForm from "@/components/dashboard/TransactionForm";
-import Transactions from "@/components/dashboard/Transactions";
+import { columns } from "@/components/dashboard/transactions/columns";
+import { DataTable } from "@/components/dashboard/transactions/DataTable";
 import getLastDate from "@/graphql/getLastDate.graphql";
+import transactionsQuery from "@/graphql/getTransactions.graphql";
 import { getMonthAndYear } from "@/utils/getMonthAndYear";
+import { getRange } from "@/utils/getRange";
 import { useSuspenseQuery } from "@apollo/client";
 import { useEffect, useState } from "react";
 
@@ -29,6 +32,17 @@ export default function Home() {
 		lastMonth!,
 	);
 	const [selectedYear, setSelectedYear] = useState<number>(lastYear!);
+
+	const {
+		data: { Transactions: data },
+	} = useSuspenseQuery<any>(transactionsQuery, {
+		variables: { range: getRange(selectedMonth, selectedYear) },
+	});
+	const transformedData = selectedCategory
+		? data.filter(
+				(transaction) => transaction.category.name === selectedCategory,
+			)
+		: data;
 
 	useEffect(() => {
 		if (lastYear && selectedYear === 1) {
@@ -76,13 +90,9 @@ export default function Home() {
 						<TransactionForm />
 					</div>
 					<div
-						className={` ${tab === 1 ? "max-lg:md:col-span-9" : "max-lg:md:hidden"} ${tab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 overflow-x-auto overflow-y-hidden lg:col-span-7`}
+						className={` ${tab === 1 ? "max-lg:md:col-span-9" : "max-lg:md:hidden"} ${tab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 lg:col-span-7`}
 					>
-						<Transactions
-							selectedCategory={selectedCategory}
-							selectedMonth={selectedMonth}
-							selectedYear={selectedYear}
-						/>
+						<DataTable columns={columns} data={transformedData} />
 					</div>
 				</div>
 			</div>
