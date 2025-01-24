@@ -1,8 +1,9 @@
+"use client";
 import { Dispatch, SetStateAction } from "react";
 
 type TabsProps = {
 	tab: number;
-	setTab: Dispatch<SetStateAction<number>>;
+	setTab?: Dispatch<SetStateAction<number>>;
 };
 
 const Tabs: React.FC<TabsProps> = ({ tab, setTab }) => {

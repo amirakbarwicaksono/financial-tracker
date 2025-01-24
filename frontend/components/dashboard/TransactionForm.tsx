@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -21,10 +23,9 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import createTransactionMutation from "@/graphql/createTransaction.graphql";
-import categoriesQuery from "@/graphql/getCategories.graphql";
 import { cn } from "@/utils/conditional";
 import { createRefetchQueries } from "@/utils/createRefetchQueries";
-import { useMutation, useSuspenseQuery } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -41,11 +42,11 @@ const schema = z.object({
 	}),
 });
 
-const TransactionForm = () => {
-	const {
-		data: { Categories: categories },
-	} = useSuspenseQuery<any>(categoriesQuery);
+interface TransactionFormProps {
+	data: any;
+}
 
+const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 	const [createTransaction, { loading, error }] = useMutation(
 		createTransactionMutation,
 		{

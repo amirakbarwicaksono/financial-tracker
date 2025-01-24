@@ -1,52 +1,59 @@
 type Transaction {
-    id: ID!
-    item: String!
-    category: Category!
-    isIncome: Boolean!
-    date: String!
-    amount: Float!
-    userId: String!
+	id: ID!
+	item: String!
+	category: Category!
+	isIncome: Boolean!
+	date: String!
+	amount: Float!
+	userId: String!
 }
 
 type Category {
-    id: ID!
-    name: String!
-    transactions(range: RangeInput): [Transaction]
-    total(range: RangeInput): Float
+	id: ID!
+	name: String!
+	transactions(range: RangeInput): [Transaction]
+	total(range: RangeInput): Float
+}
+
+type MonthSummary {
+	month: Int!
+	categories: [Category]
+	total: Float
 }
 
 type Query {
-    Transactions(range: RangeInput): [Transaction]
-    Transaction(id: ID!): Transaction
-    Categories: [Category]
-    Category(id: ID!): Category
-    Years: [Int]
-    LastDate: String
+	Transactions(range: RangeInput): [Transaction]
+	Transaction(id: ID!): Transaction
+	TransactionsByMonth(year: Int!): [MonthSummary]
+	Categories(range: RangeInput): [Category]
+	Category(id: ID!, range: RangeInput): Category
+	Years: [Int]
+	LastDate: String
 }
 
 type Mutation {
-    createTransaction(input: TransactionInput!): Transaction
-    updateTransaction(id: ID!, input: UpdateTransactionInput!): Transaction
-    deleteTransaction(id: ID!): Transaction
+	createTransaction(input: TransactionInput!): Transaction
+	updateTransaction(id: ID!, input: UpdateTransactionInput!): Transaction
+	deleteTransaction(id: ID!): Transaction
 }
 
 input RangeInput {
-    startDate: String!
-    endDate: String!
+	startDate: String!
+	endDate: String!
 }
 
 input TransactionInput {
-    item: String!
-    categoryID: ID!
-    isIncome: Boolean!
-    date: String!
-    amount: Float!
+	item: String!
+	categoryID: ID!
+	isIncome: Boolean!
+	date: String!
+	amount: Float!
 }
 
 input UpdateTransactionInput {
-    item: String
-    categoryID: ID
-    isIncome: Boolean
-    date: String
-    amount: Float
+	item: String
+	categoryID: ID
+	isIncome: Boolean
+	date: String
+	amount: Float
 }

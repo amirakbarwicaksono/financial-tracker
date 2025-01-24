@@ -56,6 +56,12 @@ type ComplexityRoot struct {
 		Transactions func(childComplexity int, rangeArg *model.RangeInput) int
 	}
 
+	MonthSummary struct {
+		Categories func(childComplexity int) int
+		Month      func(childComplexity int) int
+		Total      func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateTransaction func(childComplexity int, input model.TransactionInput) int
 		DeleteTransaction func(childComplexity int, id int) int
@@ -63,12 +69,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Categories   func(childComplexity int) int
-		Category     func(childComplexity int, id int) int
-		LastDate     func(childComplexity int) int
-		Transaction  func(childComplexity int, id int) int
-		Transactions func(childComplexity int, rangeArg *model.RangeInput) int
-		Years        func(childComplexity int) int
+		Categories          func(childComplexity int, rangeArg *model.RangeInput) int
+		Category            func(childComplexity int, id int, rangeArg *model.RangeInput) int
+		LastDate            func(childComplexity int) int
+		Transaction         func(childComplexity int, id int) int
+		Transactions        func(childComplexity int, rangeArg *model.RangeInput) int
+		TransactionsByMonth func(childComplexity int, year int) int
+		Years               func(childComplexity int) int
 	}
 
 	Transaction struct {
@@ -94,8 +101,9 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Transactions(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Transaction, error)
 	Transaction(ctx context.Context, id int) (*model.Transaction, error)
-	Categories(ctx context.Context) ([]*model.Category, error)
-	Category(ctx context.Context, id int) (*model.Category, error)
+	TransactionsByMonth(ctx context.Context, year int) ([]*model.MonthSummary, error)
+	Categories(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Category, error)
+	Category(ctx context.Context, id int, rangeArg *model.RangeInput) (*model.Category, error)
 	Years(ctx context.Context) ([]*int, error)
 	LastDate(ctx context.Context) (*string, error)
 }
@@ -160,6 +168,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Category.Transactions(childComplexity, args["range"].(*model.RangeInput)), true
 
+	case "MonthSummary.categories":
+		if e.complexity.MonthSummary.Categories == nil {
+			break
+		}
+
+		return e.complexity.MonthSummary.Categories(childComplexity), true
+
+	case "MonthSummary.month":
+		if e.complexity.MonthSummary.Month == nil {
+			break
+		}
+
+		return e.complexity.MonthSummary.Month(childComplexity), true
+
+	case "MonthSummary.total":
+		if e.complexity.MonthSummary.Total == nil {
+			break
+		}
+
+		return e.complexity.MonthSummary.Total(childComplexity), true
+
 	case "Mutation.createTransaction":
 		if e.complexity.Mutation.CreateTransaction == nil {
 			break
@@ -201,7 +230,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Categories(childComplexity), true
+		args, err := ec.field_Query_Categories_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Categories(childComplexity, args["range"].(*model.RangeInput)), true
 
 	case "Query.Category":
 		if e.complexity.Query.Category == nil {
@@ -213,7 +247,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Category(childComplexity, args["id"].(int)), true
+		return e.complexity.Query.Category(childComplexity, args["id"].(int), args["range"].(*model.RangeInput)), true
 
 	case "Query.LastDate":
 		if e.complexity.Query.LastDate == nil {
@@ -245,6 +279,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Transactions(childComplexity, args["range"].(*model.RangeInput)), true
+
+	case "Query.TransactionsByMonth":
+		if e.complexity.Query.TransactionsByMonth == nil {
+			break
+		}
+
+		args, err := ec.field_Query_TransactionsByMonth_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TransactionsByMonth(childComplexity, args["year"].(int)), true
 
 	case "Query.Years":
 		if e.complexity.Query.Years == nil {
@@ -435,7 +481,7 @@ func (ec *executionContext) field_Category_total_args(ctx context.Context, rawAr
 	var arg0 *model.RangeInput
 	if tmp, ok := rawArgs["range"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
-		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐRangeInput(ctx, tmp)
+		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐRangeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -450,7 +496,7 @@ func (ec *executionContext) field_Category_transactions_args(ctx context.Context
 	var arg0 *model.RangeInput
 	if tmp, ok := rawArgs["range"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
-		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐRangeInput(ctx, tmp)
+		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐRangeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -465,7 +511,7 @@ func (ec *executionContext) field_Mutation_createTransaction_args(ctx context.Co
 	var arg0 model.TransactionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransactionInput(ctx, tmp)
+		arg0, err = ec.unmarshalNTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransactionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -504,12 +550,27 @@ func (ec *executionContext) field_Mutation_updateTransaction_args(ctx context.Co
 	var arg1 model.UpdateTransactionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐUpdateTransactionInput(ctx, tmp)
+		arg1, err = ec.unmarshalNUpdateTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐUpdateTransactionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_Categories_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.RangeInput
+	if tmp, ok := rawArgs["range"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
+		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐRangeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["range"] = arg0
 	return args, nil
 }
 
@@ -525,6 +586,15 @@ func (ec *executionContext) field_Query_Category_args(ctx context.Context, rawAr
 		}
 	}
 	args["id"] = arg0
+	var arg1 *model.RangeInput
+	if tmp, ok := rawArgs["range"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
+		arg1, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐRangeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["range"] = arg1
 	return args, nil
 }
 
@@ -543,13 +613,28 @@ func (ec *executionContext) field_Query_Transaction_args(ctx context.Context, ra
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_TransactionsByMonth_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["year"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["year"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_Transactions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *model.RangeInput
 	if tmp, ok := rawArgs["range"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
-		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐRangeInput(ctx, tmp)
+		arg0, err = ec.unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐRangeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -724,7 +809,7 @@ func (ec *executionContext) _Category_transactions(ctx context.Context, field gr
 	}
 	res := resTmp.([]*model.Transaction)
 	fc.Result = res
-	return ec.marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Category_transactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -819,6 +904,142 @@ func (ec *executionContext) fieldContext_Category_total(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _MonthSummary_month(ctx context.Context, field graphql.CollectedField, obj *model.MonthSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MonthSummary_month(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MonthSummary_month(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MonthSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MonthSummary_categories(ctx context.Context, field graphql.CollectedField, obj *model.MonthSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MonthSummary_categories(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Categories, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Category)
+	fc.Result = res
+	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MonthSummary_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MonthSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Category_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Category_name(ctx, field)
+			case "transactions":
+				return ec.fieldContext_Category_transactions(ctx, field)
+			case "total":
+				return ec.fieldContext_Category_total(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MonthSummary_total(ctx context.Context, field graphql.CollectedField, obj *model.MonthSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MonthSummary_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MonthSummary_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MonthSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createTransaction(ctx, field)
 	if err != nil {
@@ -844,7 +1065,7 @@ func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Transaction)
 	fc.Result = res
-	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -912,7 +1133,7 @@ func (ec *executionContext) _Mutation_updateTransaction(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Transaction)
 	fc.Result = res
-	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -980,7 +1201,7 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Transaction)
 	fc.Result = res
-	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1048,7 +1269,7 @@ func (ec *executionContext) _Query_Transactions(ctx context.Context, field graph
 	}
 	res := resTmp.([]*model.Transaction)
 	fc.Result = res
-	return ec.marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_Transactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1116,7 +1337,7 @@ func (ec *executionContext) _Query_Transaction(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Transaction)
 	fc.Result = res
-	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_Transaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1159,6 +1380,66 @@ func (ec *executionContext) fieldContext_Query_Transaction(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_TransactionsByMonth(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_TransactionsByMonth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TransactionsByMonth(rctx, fc.Args["year"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MonthSummary)
+	fc.Result = res
+	return ec.marshalOMonthSummary2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐMonthSummary(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_TransactionsByMonth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "month":
+				return ec.fieldContext_MonthSummary_month(ctx, field)
+			case "categories":
+				return ec.fieldContext_MonthSummary_categories(ctx, field)
+			case "total":
+				return ec.fieldContext_MonthSummary_total(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MonthSummary", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_TransactionsByMonth_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_Categories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_Categories(ctx, field)
 	if err != nil {
@@ -1173,7 +1454,7 @@ func (ec *executionContext) _Query_Categories(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Categories(rctx)
+		return ec.resolvers.Query().Categories(rctx, fc.Args["range"].(*model.RangeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1184,7 +1465,7 @@ func (ec *executionContext) _Query_Categories(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.Category)
 	fc.Result = res
-	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_Categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1207,6 +1488,17 @@ func (ec *executionContext) fieldContext_Query_Categories(ctx context.Context, f
 			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
 		},
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_Categories_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
 	return fc, nil
 }
 
@@ -1224,7 +1516,7 @@ func (ec *executionContext) _Query_Category(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Category(rctx, fc.Args["id"].(int))
+		return ec.resolvers.Query().Category(rctx, fc.Args["id"].(int), fc.Args["range"].(*model.RangeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1235,7 +1527,7 @@ func (ec *executionContext) _Query_Category(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.Category)
 	fc.Result = res
-	return ec.marshalOCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalOCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_Category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1599,7 +1891,7 @@ func (ec *executionContext) _Transaction_category(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Category)
 	fc.Result = res
-	return ec.marshalNCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Transaction_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3836,6 +4128,49 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var monthSummaryImplementors = []string{"MonthSummary"}
+
+func (ec *executionContext) _MonthSummary(ctx context.Context, sel ast.SelectionSet, obj *model.MonthSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, monthSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MonthSummary")
+		case "month":
+			out.Values[i] = ec._MonthSummary_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "categories":
+			out.Values[i] = ec._MonthSummary_categories(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._MonthSummary_total(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3938,6 +4273,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_Transaction(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "TransactionsByMonth":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_TransactionsByMonth(ctx, field)
 				return res
 			}
 
@@ -4495,11 +4849,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCategory2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
 	return ec._Category(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4539,6 +4893,21 @@ func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.Selectio
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4554,12 +4923,12 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransactionInput(ctx context.Context, v interface{}) (model.TransactionInput, error) {
+func (ec *executionContext) unmarshalNTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransactionInput(ctx context.Context, v interface{}) (model.TransactionInput, error) {
 	res, err := ec.unmarshalInputTransactionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐUpdateTransactionInput(ctx context.Context, v interface{}) (model.UpdateTransactionInput, error) {
+func (ec *executionContext) unmarshalNUpdateTransactionInput2githubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐUpdateTransactionInput(ctx context.Context, v interface{}) (model.UpdateTransactionInput, error) {
 	res, err := ec.unmarshalInputUpdateTransactionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -4843,7 +5212,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4870,7 +5239,7 @@ func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfi
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
+			ret[i] = ec.marshalOCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4884,7 +5253,7 @@ func (ec *executionContext) marshalOCategory2ᚕᚖgithubᚗcomᚋaashish47ᚋfi
 	return ret
 }
 
-func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4971,31 +5340,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐRangeInput(ctx context.Context, v interface{}) (*model.RangeInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputRangeInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalString(*v)
-	return res
-}
-
-func (ec *executionContext) marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v []*model.Transaction) graphql.Marshaler {
+func (ec *executionContext) marshalOMonthSummary2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐMonthSummary(ctx context.Context, sel ast.SelectionSet, v []*model.MonthSummary) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5022,7 +5367,7 @@ func (ec *executionContext) marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx, sel, v[i])
+			ret[i] = ec.marshalOMonthSummary2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐMonthSummary(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5036,7 +5381,79 @@ func (ec *executionContext) marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47�
 	return ret
 }
 
-func (ec *executionContext) marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v *model.Transaction) graphql.Marshaler {
+func (ec *executionContext) marshalOMonthSummary2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐMonthSummary(ctx context.Context, sel ast.SelectionSet, v *model.MonthSummary) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MonthSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalORangeInput2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐRangeInput(ctx context.Context, v interface{}) (*model.RangeInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputRangeInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) marshalOTransaction2ᚕᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v []*model.Transaction) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOTransaction2ᚖgithubᚗcomᚋaashish47ᚋfinanceᚑtrackerᚋbackendᚋgraphqlᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v *model.Transaction) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

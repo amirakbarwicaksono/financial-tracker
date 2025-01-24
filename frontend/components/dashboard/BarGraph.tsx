@@ -6,78 +6,31 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
-import query from "@/graphql/getTransactions.graphql";
 import { cn } from "@/utils/conditional";
-import { getRange } from "@/utils/getRange";
-import { useSuspenseQuery } from "@apollo/client";
+import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from "recharts";
 
 interface BarGraphProps {
-	selectedMonth: number | undefined;
-	setSelectedMonth: React.Dispatch<React.SetStateAction<number | undefined>>;
+	selectedMonth?: number;
 	selectedYear: number;
+	selectedCategory?: string;
+	monthlySummary: any;
 }
 
 const BarGraph = ({
 	selectedMonth,
-	setSelectedMonth,
 	selectedYear,
+	selectedCategory,
+	monthlySummary,
 }: BarGraphProps) => {
-	const months = [
-		"January",
-		"February",
-		"March",
-		"April",
-		"May",
-		"June",
-		"July",
-		"August",
-		"September",
-		"October",
-		"November",
-		"December",
-	];
-
-	const {
-		data: { Transactions: data },
-	} = useSuspenseQuery<any>(query, {
-		variables: { range: getRange(undefined, selectedYear) },
-	});
-
-	// Step 1: Parse the input data
-	const parsedData = data.map(
-		({ date, amount }: { date: string; amount: number }) => ({
-			month: new Date(date).toLocaleString("en-US", { month: "long" }),
-			amount,
-		}),
-	);
-
-	// Step 2: Group the data by month
-	const accumulator: { [key: string]: number } = {};
-	months.forEach((month) => (accumulator[month] = 0));
-
-	const groupedData = parsedData.reduce(
-		(acc: { [x: string]: any }, entry: { month: any; amount: any }) => {
-			const { month, amount } = entry;
-			acc[month] = (acc[month] || 0) + amount;
-			return acc;
-		},
-		accumulator,
-	);
-
-	// Step 3: Transform the grouped data into the desired format
-	const resultData = Object.keys(groupedData).map((month) => ({
-		month,
-		amount: groupedData[month],
-	}));
+	const router = useRouter();
 
 	const chartConfig = { amount: { label: "Amount" } } satisfies ChartConfig;
-
 	const chartColor = "hsl(var(--primary))";
 
 	return (
 		<ChartContainer config={chartConfig} className="h-full w-full">
-			<BarChart accessibilityLayer data={resultData}>
+			<BarChart accessibilityLayer data={monthlySummary}>
 				<CartesianGrid vertical={false} />
 				<XAxis
 					dataKey="month"
@@ -86,18 +39,21 @@ const BarGraph = ({
 					axisLine={false}
 					tickFormatter={(value) => value.slice(0, 3)}
 				/>
-
 				<ChartTooltip
 					cursor={false}
 					content={<ChartTooltipContent indicator="line" />}
 				/>
-
 				<Bar
 					onClick={(_, index) => {
+						console.log(index);
 						if (selectedMonth !== index) {
-							setSelectedMonth(index);
+							router.push(
+								`/home?year=${selectedYear}&month=${index + 1}${selectedCategory ? `&category=${selectedCategory}` : ""}`,
+							);
 						} else {
-							setSelectedMonth(undefined);
+							router.push(
+								`/home?year=${selectedYear}${selectedCategory ? `&category=${selectedCategory}` : ""}`,
+							);
 						}
 					}}
 					activeIndex={selectedMonth}

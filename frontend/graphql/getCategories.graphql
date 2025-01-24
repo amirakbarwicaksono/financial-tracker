@@ -1,5 +1,5 @@
 query ($range: RangeInput) {
-	Categories {
+	Categories(range: $range) {
 		id
 		name
 		total(range: $range)

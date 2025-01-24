@@ -7,48 +7,27 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
-import getCategoriesQuery from "@/graphql/getCategories.graphql";
-import { getRange } from "@/utils/getRange";
-import { useSuspenseQuery } from "@apollo/client";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Label, Legend, Pie, PieChart, Sector } from "recharts";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";
 
 interface PieGraphProps {
-	selectedCategory: string | null;
-	setSelectedCategory: React.Dispatch<React.SetStateAction<string | null>>;
-	selectedMonth: number | undefined;
+	data: any;
+	total: any;
+	activeIndex: any;
+	selectedCategory?: string;
+	selectedMonth?: number;
 	selectedYear: number;
 }
 
 const PieGraph = ({
+	data,
+	total,
+	activeIndex,
 	selectedCategory,
-	setSelectedCategory,
 	selectedMonth,
 	selectedYear,
 }: PieGraphProps) => {
-	const [activeIndex, setActiveIndex] = useState(-1);
-	const {
-		data: { Categories: data },
-	} = useSuspenseQuery<any>(getCategoriesQuery, {
-		variables: { range: getRange(selectedMonth, selectedYear) },
-	});
-	const transformedData = data.map(
-		({ name, total }: { name: string; total: number }) => {
-			return { category: name, amount: total, fill: `var(--color-${name})` };
-		},
-	);
-
-	const [total, setTotal] = useState(0);
-
-	useEffect(() => {
-		const calculatedTotal = data.reduce((acc: any, item: { total: any }) => {
-			return acc + item.total;
-		}, 0);
-
-		setTotal(calculatedTotal);
-	}, [data]);
-
 	const COLORS = [
 		"#e6194B",
 		"#f58231",
@@ -68,19 +47,18 @@ const PieGraph = ({
 		"#ffffff",
 	];
 
-	const chartConfig = transformedData.reduce(
-		(acc: any, data: any, index: any) => {
-			const category = data.category;
-			acc[category] = {
-				label: category,
-				color: COLORS[index % COLORS.length],
-			};
-			return acc;
-		},
-		{},
-	) satisfies ChartConfig;
+	const chartConfig = data.reduce((acc: any, data: any, index: any) => {
+		const category = data.category;
+		acc[category] = {
+			label: category,
+			color: COLORS[index % COLORS.length],
+		};
+		return acc;
+	}, {}) satisfies ChartConfig;
 
 	chartConfig["amount"] = { label: "Amount" };
+
+	const router = useRouter();
 
 	return (
 		<ChartContainer config={chartConfig} className="h-full w-full">
@@ -99,17 +77,21 @@ const PieGraph = ({
 				/>
 				<Pie
 					onClick={(_, index) => {
-						const categoryID = transformedData[index]?.category;
+						const categoryID = data[index]?.category;
+						console.log(categoryID, selectedCategory);
 						if (selectedCategory !== categoryID) {
-							setSelectedCategory(categoryID);
+							router.push(
+								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&category=${categoryID}`,
+							);
 						} else {
-							setSelectedCategory(null);
+							router.push(
+								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}`,
+							);
 						}
-						setActiveIndex(activeIndex === index ? -1 : index);
 					}}
 					className="hover:cursor-pointer"
 					activeIndex={activeIndex}
-					data={transformedData}
+					data={data}
 					dataKey="amount"
 					minAngle={10}
 					innerRadius={60}
@@ -140,12 +122,7 @@ const PieGraph = ({
 											y={viewBox.cy}
 											className="fill-foreground text-2xl font-bold"
 										>
-											{selectedCategory
-												? data.find(
-														(cat: { name: string }) =>
-															cat.name === selectedCategory,
-													)?.total
-												: total}
+											{total}
 										</tspan>
 										<tspan
 											x={viewBox.cx}

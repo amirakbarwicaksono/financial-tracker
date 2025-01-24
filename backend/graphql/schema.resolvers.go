@@ -6,73 +6,25 @@ package graphql
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/aashish47/finance-tracker/backend/graphql/model"
 	"github.com/aashish47/finance-tracker/backend/middleware"
 	jwt "github.com/dgrijalva/jwt-go"
+	"gorm.io/gorm"
 )
 
 // Transactions is the resolver for the transactions field.
 func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
-	key := middleware.ContextKeyClaims
-	claims, ok := ctx.Value(key).(jwt.MapClaims)
-	if !ok {
-
-		return nil, errors.New("failed to retrieve claims from context")
-	}
-
-	transactions := []*model.Transaction{}
-	userId, ok := claims["sub"].(string)
-	if !ok {
-		return nil, errors.New("user id not found in claims")
-	}
-
-	query := r.DB.Where("category_id = ? AND user_id = ?", obj.ID, userId)
-
-	if rangeArg != nil {
-		query = query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
-	}
-
-	if err := query.Find(&transactions).Error; err != nil {
-		return nil, err
-	}
-
-	return transactions, nil
+	return obj.Transactions, nil
 }
 
 // Total is the resolver for the total field.
 func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) (*float64, error) {
-	key := middleware.ContextKeyClaims
-	claims, ok := ctx.Value(key).(jwt.MapClaims)
-	if !ok {
-		return nil, errors.New("failed to retrieve claims from context")
-	}
-
-	var total sql.NullFloat64
-	userId, ok := claims["sub"].(string)
-	if !ok {
-		return nil, errors.New("user id not found in claims")
-	}
-
-	query := r.DB.Model(&model.Transaction{}).Select("COALESCE(SUM(amount), 0)").Where("category_id = ? AND user_id = ?", obj.ID, userId)
-
-	if rangeArg != nil {
-		query = query.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
-	}
-
-	if err := query.Row().Scan(&total); err != nil {
-		return nil, err
-	}
-
-	if !total.Valid {
-		return nil, nil
-	}
-
-	return &total.Float64, nil
+	return obj.Total, nil
 }
 
 // CreateTransaction is the resolver for the createTransaction field.
@@ -178,6 +130,25 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 
 	query = query.Order("date DESC")
 
+	// Modify the preload to include the total for each category, considering the date range
+	query = query.Preload("Category", func(db *gorm.DB) *gorm.DB {
+		if rangeArg != nil {
+			// If rangeArg is provided, apply date filter to the total subquery
+			return db.Select("id, name, (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE category_id = categories.id AND date >= ? AND date <= ?) AS total", rangeArg.StartDate, rangeArg.EndDate)
+		} else {
+			// If rangeArg is nil, calculate total without date filter
+			return db.Select("id, name, (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE category_id = categories.id) AS total")
+		}
+	}).Preload("Category.Transactions", func(db *gorm.DB) *gorm.DB {
+		if rangeArg != nil {
+			// Apply date filter to the transactions preload for each category
+			return db.Where("date >= ? AND date <= ?", rangeArg.StartDate, rangeArg.EndDate)
+		} else {
+			// Don't apply any date filter if rangeArg is nil
+			return db
+		}
+	})
+	// Execute the query and preload the transactions with their categories
 	if err := query.Find(&transactions).Error; err != nil {
 		return nil, err
 	}
@@ -200,25 +171,250 @@ func (r *queryResolver) Transaction(ctx context.Context, id int) (*model.Transac
 	}
 
 	// Query the transaction ensuring it belongs to the authenticated user
-	if err := r.DB.Where("id = ? AND user_id = ?", id, userId).First(&transaction).Error; err != nil {
+	if err := r.DB.Preload("Category").Where("id = ? AND user_id = ?", id, userId).First(&transaction).Error; err != nil {
 		return nil, err
 	}
 
 	return &transaction, nil
 }
 
-// Categories is the resolver for the Categories field.
-func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, error) {
-	categories := []*model.Category{}
+// TransactionsByMonth is the resolver for the TransactionsByMonth field.
+func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*model.MonthSummary, error) {
+	key := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(key).(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
+	// Query to group transactions by month and calculate the total for each month
+	var groupedTotals []struct {
+		Month int     `gorm:"column:month"`
+		Total float64 `gorm:"column:total"`
+	}
+	err := r.DB.
+		Model(&model.Transaction{}).
+		Select("EXTRACT(MONTH FROM date) AS month, SUM(amount) AS total").
+		Where("user_id = ? AND EXTRACT(YEAR FROM date) = ?", userId, year).
+		Group("month").
+		Order("month ASC").
+		Scan(&groupedTotals).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch grouped totals: %w", err)
+	}
+
+	// Query to group transactions by month and category, including the transactions
+	var groupedByMonthCategoryAndTransactions []struct {
+		Month         int               `gorm:"column:month"`
+		CategoryID    int               `gorm:"column:category_id"`
+		CategoryName  string            `gorm:"column:category_name"`
+		CategoryTotal float64           `gorm:"column:category_total"`
+		TransactionID int               `gorm:"column:transaction_id"`
+		Transaction   model.Transaction `gorm:"embedded"`
+	}
+	err = r.DB.
+		Model(&model.Transaction{}).
+		Select(`EXTRACT(MONTH FROM date) AS month, 
+                transactions.category_id, 
+                (SELECT name FROM categories WHERE id = transactions.category_id) AS category_name, 
+                SUM(transactions.amount) AS category_total, 
+                transactions.id AS transaction_id, 
+                transactions.*`).
+		Joins("LEFT JOIN categories ON categories.id = transactions.category_id").
+		Where("transactions.user_id = ? AND EXTRACT(YEAR FROM transactions.date) = ?", userId, year).
+		Group("month, transactions.category_id, transactions.id, categories.id").
+		Order("month ASC, transactions.category_id ASC").
+		Scan(&groupedByMonthCategoryAndTransactions).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch grouped data by month, category, and transactions: %w", err)
+	}
+
+	// Map to organize categories with transactions by month
+	monthCategoryMap := make(map[int]map[int]*model.Category)
+	for _, group := range groupedByMonthCategoryAndTransactions {
+		// Initialize category map for the month if not already done
+		if _, exists := monthCategoryMap[group.Month]; !exists {
+			monthCategoryMap[group.Month] = make(map[int]*model.Category)
+		}
+
+		// Initialize the category if it doesn't already exist in the map
+		category, exists := monthCategoryMap[group.Month][group.CategoryID]
+		if !exists {
+			total := group.CategoryTotal
+			category = &model.Category{
+				ID:    group.CategoryID,
+				Name:  group.CategoryName,
+				Total: &total,
+			}
+			monthCategoryMap[group.Month][group.CategoryID] = category
+		}
+
+		// Add the transaction to the category
+		transaction := group.Transaction
+		transaction.Category = &model.Category{ // Preload Category for each transaction
+			ID:   group.CategoryID,
+			Name: group.CategoryName,
+		}
+		category.Transactions = append(category.Transactions, &transaction)
+
+	}
+
+	// Prepare the final MonthSummary list
+	monthSummaries := make([]*model.MonthSummary, 12)
+	groupedTotalsMap := make(map[int]*float64)
+	for _, group := range groupedTotals {
+		total := group.Total
+		groupedTotalsMap[group.Month] = &total
+	}
+
+	for month := 1; month <= 12; month++ {
+		// Convert the category map for this month into a slice
+		categories := []*model.Category{}
+		if catMap, exists := monthCategoryMap[month]; exists {
+			for _, category := range catMap {
+				categories = append(categories, category)
+			}
+		}
+		// Sort categories by ID
+		sort.Slice(categories, func(i, j int) bool {
+			return categories[i].ID < categories[j].ID
+		})
+
+		monthSummaries[month-1] = &model.MonthSummary{
+			Month:      month,
+			Categories: categories,              // Categories with transactions for this month
+			Total:      groupedTotalsMap[month], // Total for this month
+		}
+
+		// Set defaults if necessary
+		if monthSummaries[month-1].Categories == nil {
+			monthSummaries[month-1].Categories = []*model.Category{}
+		}
+		if monthSummaries[month-1].Total == nil {
+			monthSummaries[month-1].Total = new(float64)
+			*monthSummaries[month-1].Total = 0
+
+		}
+
+	}
+
+	return monthSummaries, nil
+}
+
+func (r *queryResolver) Categories(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Category, error) {
+	// Get userId from context claims
+	claimsKey := middleware.ContextKeyClaims
+	claims, ok := ctx.Value(claimsKey).(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("failed to retrieve claims from context")
+	}
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("user id not found in claims")
+	}
+
+	// Apply date range filter if provided
+	var rangeQuery *gorm.DB
+	if rangeArg != nil {
+		rangeQuery = r.DB.Where("transactions.date >= ? AND transactions.date <= ?", rangeArg.StartDate, rangeArg.EndDate)
+	}
+
+	// Query categories (ALL categories)
+	var categories []*model.Category
 	if err := r.DB.Find(&categories).Error; err != nil {
 		return nil, err
 	}
 
-	return categories, nil
+	// Query transactions with totals, joined with categories
+	// Querying all transactions for the user, filtering by range if provided
+	query := r.DB.Table("transactions").
+		Select("transactions.category_id, transactions.id AS transaction_id, transactions.amount, transactions.item, transactions.date, COALESCE(SUM(transactions.amount), 0) AS total").
+		Joins("LEFT JOIN categories ON categories.id = transactions.category_id").
+		Where("transactions.user_id = ?", userId).
+		Group("transactions.category_id, transactions.id")
+
+	// Apply the date range filter for transactions if provided
+	if rangeQuery != nil {
+		query = query.Where("transactions.date >= ? AND transactions.date <= ?", rangeArg.StartDate, rangeArg.EndDate)
+	}
+
+	// Execute the query and get transactions with category totals
+	var transactionsWithTotals []struct {
+		CategoryID    int     `gorm:"column:category_id"`
+		TransactionID int     `gorm:"column:transaction_id"`
+		Amount        float64 `gorm:"column:amount"`
+		Item          string  `gorm:"column:item"`
+		Date          string  `gorm:"column:date"`
+		Total         float64 `gorm:"column:total"`
+	}
+
+	if err := query.Scan(&transactionsWithTotals).Error; err != nil {
+		return nil, err
+	}
+
+	// Initialize a map to store categories by their ID
+	categoryMap := make(map[int]*model.Category)
+	// Populate categoryMap with all categories
+	for _, category := range categories {
+		// Set default total to 0 if not already set
+		if category.Total == nil {
+			category.Total = new(float64)
+		}
+		// Ensure transactions is an empty array by default
+		category.Transactions = []*model.Transaction{}
+		categoryMap[category.ID] = category
+	}
+
+	// Map to store transactions for each category
+	for _, data := range transactionsWithTotals {
+		category, exists := categoryMap[data.CategoryID]
+		if !exists {
+			continue // Skip if no such category exists (shouldn't happen with all categories preloaded)
+		}
+
+		// Add the transaction to the category
+		category.Transactions = append(category.Transactions, &model.Transaction{
+			ID:       data.TransactionID,
+			Amount:   data.Amount,
+			Item:     data.Item,
+			Date:     data.Date,
+			Category: category,
+		})
+
+		// Update the total for the category
+		*category.Total += data.Total
+	}
+
+	// Sort transactions by date (or any field you want)
+	for _, category := range categoryMap {
+		sort.Slice(category.Transactions, func(i, j int) bool {
+			// Example sorting by date
+			return category.Transactions[i].Date < category.Transactions[j].Date
+		})
+	}
+
+	// Convert map to slice and sort categories by ID
+	var finalCategories []*model.Category
+	for _, category := range categoryMap {
+		finalCategories = append(finalCategories, category)
+	}
+
+	// Sort categories by ID
+	sort.Slice(finalCategories, func(i, j int) bool {
+		return finalCategories[i].ID < finalCategories[j].ID
+	})
+
+	return finalCategories, nil
 }
 
 // Category is the resolver for the Category field.
-func (r *queryResolver) Category(ctx context.Context, id int) (*model.Category, error) {
+func (r *queryResolver) Category(ctx context.Context, id int, rangeArg *model.RangeInput) (*model.Category, error) {
 	category := model.Category{}
 
 	if err := r.DB.First(&category, id).Error; err != nil {
@@ -294,12 +490,7 @@ func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
 
 // Category is the resolver for the category field.
 func (r *transactionResolver) Category(ctx context.Context, obj *model.Transaction) (*model.Category, error) {
-	category := &model.Category{}
-
-	if err := r.DB.First(&category, obj.CategoryID).Error; err != nil {
-		return nil, err
-	}
-	return category, nil
+	return obj.Category, nil
 }
 
 // Category returns CategoryResolver implementation.

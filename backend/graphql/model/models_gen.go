@@ -9,6 +9,12 @@ type Category struct {
 	Total        *float64       `json:"total,omitempty"`
 }
 
+type MonthSummary struct {
+	Month      int         `json:"month"`
+	Categories []*Category `json:"categories,omitempty"`
+	Total      *float64    `json:"total,omitempty"`
+}
+
 type Mutation struct {
 }
 

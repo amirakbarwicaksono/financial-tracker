@@ -1,5 +1,3 @@
-"use client";
-
 import Accounts from "@/components/dashboard/Accounts";
 import BarGraph from "@/components/dashboard/BarGraph";
 import Navbar from "@/components/dashboard/Navbar";
@@ -9,90 +7,178 @@ import Tabs from "@/components/dashboard/Tabs";
 import TransactionForm from "@/components/dashboard/TransactionForm";
 import { columns } from "@/components/dashboard/transactions/columns";
 import { DataTable } from "@/components/dashboard/transactions/DataTable";
+import getCategories from "@/graphql/getCategories.graphql";
 import getLastDate from "@/graphql/getLastDate.graphql";
-import transactionsQuery from "@/graphql/getTransactions.graphql";
+import transactionsByMonth from "@/graphql/getTransactionsByMonth.graphql";
+import getYears from "@/graphql/getYears.graphql";
+import { getClient } from "@/lib/client";
 import { getMonthAndYear } from "@/utils/getMonthAndYear";
-import { getRange } from "@/utils/getRange";
-import { useSuspenseQuery } from "@apollo/client";
-import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/server";
+import { format } from "date-fns";
+import { getRange } from "../../utils/getRange";
 
-export default function Home() {
+export default async function Page({
+	searchParams,
+}: {
+	searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
+	const supabase = await createClient();
 	const {
-		data: { LastDate },
-	} = useSuspenseQuery<any>(getLastDate);
+		data: { user },
+	} = await supabase.auth.getUser();
 
-	let { month: lastMonth, year: lastYear } = getMonthAndYear(LastDate);
-	if (!lastYear) {
-		lastYear = 1;
+	const userData = user?.user_metadata;
+
+	const apollo = getClient();
+	const { year, month, category, tab = 1 } = await searchParams;
+
+	let selectedYear, selectedMonth;
+	if (!year) {
+		const {
+			data: { LastDate },
+		} = await apollo.query({ query: getLastDate });
+		const { month, year } = getMonthAndYear(LastDate);
+		selectedYear = year ? year : 1;
+		selectedMonth = month ?? undefined;
+	} else {
+		selectedYear = Number(year);
+		selectedMonth =
+			month && Number(month) >= 1 && Number(month) <= 12
+				? Number(month) - 1
+				: undefined;
 	}
 
-	const [tab, setTab] = useState(1);
-	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-	const [selectedMonth, setSelectedMonth] = useState<number | undefined>(
-		lastMonth!,
-	);
-	const [selectedYear, setSelectedYear] = useState<number>(lastYear!);
+	const selectedCategory = category;
+	const selectedTab = Number(tab);
 
 	const {
-		data: { Transactions: data },
-	} = useSuspenseQuery<any>(transactionsQuery, {
-		variables: { range: getRange(selectedMonth, selectedYear) },
+		data: { TransactionsByMonth: d },
+	} = await apollo.query({
+		query: transactionsByMonth,
+		variables: { year: selectedYear },
+		fetchPolicy: "no-cache",
 	});
-	const transformedData = selectedCategory
-		? data.filter(
-				(transaction) => transaction.category.name === selectedCategory,
-			)
-		: data;
 
-	useEffect(() => {
-		if (lastYear && selectedYear === 1) {
-			setSelectedYear(lastYear);
-		}
-		if (lastYear === 1) {
-			setSelectedYear(1);
-		}
-	}, [lastYear, selectedYear]);
+	const {
+		data: { Years },
+	} = await apollo.query({ query: getYears });
+
+	// const {
+	// 	data: { session },
+	// } = await supabase.auth.getSession();
+	// console.log(session?.access_token);
+
+	const {
+		data: { Categories },
+	} = await apollo.query({
+		query: getCategories,
+		variables: { range: getRange(undefined, selectedYear) },
+	});
+
+	const nameToIdMap = Categories.reduce((map, category) => {
+		map[category.name] = category.id;
+		return map;
+	}, {});
+
+	const categoryTotals = Categories.map((category) => {
+		return {
+			category: category.name,
+			amount:
+				selectedMonth !== undefined
+					? (d[selectedMonth].categories.find((cat) => cat.id === category.id)
+							?.total ?? 0)
+					: (category.total ?? 0),
+			fill: `var(--color-${category.name})`,
+		};
+	});
+
+	const total =
+		selectedMonth !== undefined && selectedCategory
+			? d[selectedMonth].categories.find((cat) => cat.name === selectedCategory)
+					?.total
+			: selectedMonth !== undefined
+				? d[selectedMonth].total
+				: selectedCategory
+					? Categories.find((cat) => cat.name === selectedCategory).total
+					: d.reduce((acc, month) => acc + month.total, 0);
+
+	const transactions =
+		selectedMonth !== undefined && selectedCategory
+			? (d[selectedMonth].categories.find(
+					(cat) => cat.name === selectedCategory,
+				)?.transactions ?? [])
+			: selectedMonth !== undefined
+				? d[selectedMonth].categories.flatMap((cat) => cat.transactions)
+				: selectedCategory
+					? d.flatMap(
+							(month) =>
+								month.categories.find((cat) => cat.name === selectedCategory)
+									?.transactions ?? [],
+						)
+					: d.flatMap((month) =>
+							month.categories.flatMap((cat) => cat.transactions),
+						);
+	const monthly = d.map((month, index) => {
+		return {
+			month: format(new Date(1990, index, 1), "MMMM"),
+			amount: selectedCategory
+				? (month.categories.find((cat) => cat.name === selectedCategory)
+						?.total ?? 0)
+				: month.total,
+		};
+	});
 
 	return (
 		<div className="flex h-screen min-h-[600px] flex-col-reverse md:flex-row">
 			<Sidebar />
 			<div className="flex w-full flex-grow flex-col gap-2 p-2">
-				<Navbar selectedYear={selectedYear} setSelectedYear={setSelectedYear} />
-				<Tabs tab={tab} setTab={setTab} />
+				<Navbar
+					userData={userData}
+					data={Years}
+					selectedYear={selectedYear}
+					selectedCategory={selectedCategory}
+					selectedMonth={selectedMonth}
+				/>
+				<Tabs tab={selectedTab} />
 				<div className="grid h-[1px] flex-grow grid-cols-12 grid-rows-6 gap-2 overflow-hidden">
 					<div
-						className={` ${tab === 1 ? "max-lg:col-span-full max-lg:md:col-span-7" : "max-lg:hidden"} bubble row-span-3 lg:col-span-5`}
+						className={` ${selectedTab === 1 ? "max-lg:col-span-full max-lg:md:col-span-7" : "max-lg:hidden"} bubble row-span-3 lg:col-span-5`}
 					>
 						<PieGraph
+							data={categoryTotals}
+							total={total}
+							activeIndex={
+								selectedCategory ? nameToIdMap[selectedCategory] - 1 : -1
+							}
 							selectedCategory={selectedCategory}
 							selectedMonth={selectedMonth}
 							selectedYear={selectedYear}
-							setSelectedCategory={setSelectedCategory}
 						/>
 					</div>
 					<div
-						className={` ${tab === 1 ? "max-lg:col-span-full max-lg:md:col-span-5" : "max-lg:hidden"} bubble row-span-3 lg:col-span-4`}
+						className={` ${selectedTab === 1 ? "max-lg:col-span-full max-lg:md:col-span-5" : "max-lg:hidden"} bubble row-span-3 lg:col-span-4`}
 					>
 						<BarGraph
 							selectedMonth={selectedMonth}
-							setSelectedMonth={setSelectedMonth}
 							selectedYear={selectedYear}
+							selectedCategory={selectedCategory}
+							monthlySummary={monthly}
 						/>
 					</div>
 					<div
-						className={` ${tab === 3 ? "max-lg:col-span-full" : "max-lg:hidden"} bubble row-span-6 lg:col-span-3`}
+						className={` ${selectedTab === 3 ? "max-lg:col-span-full" : "max-lg:hidden"} bubble row-span-6 lg:col-span-3`}
 					>
 						<Accounts />
 					</div>
 					<div
-						className={` ${tab === 1 ? "max-lg:md:col-span-3" : "max-lg:md:hidden"} ${tab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 overflow-auto lg:col-span-2`}
+						className={` ${selectedTab === 1 ? "max-lg:md:col-span-3" : "max-lg:md:hidden"} ${selectedTab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 overflow-auto lg:col-span-2`}
 					>
-						<TransactionForm />
+						<TransactionForm data={Categories} />
 					</div>
 					<div
-						className={` ${tab === 1 ? "max-lg:md:col-span-9" : "max-lg:md:hidden"} ${tab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 lg:col-span-7`}
+						className={` ${selectedTab === 1 ? "max-lg:md:col-span-9" : "max-lg:md:hidden"} ${selectedTab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 lg:col-span-7`}
 					>
-						<DataTable columns={columns} data={transformedData} />
+						<DataTable columns={columns} data={transactions} />
 					</div>
 				</div>
 			</div>

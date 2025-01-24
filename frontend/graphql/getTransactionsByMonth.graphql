@@ -1,0 +1,21 @@
+query ($year: Int!) {
+	TransactionsByMonth(year: $year) {
+		# month
+		categories {
+			id
+			name
+			transactions {
+				id
+				item
+				date
+				amount
+				category {
+					id
+					name
+				}
+			}
+			total
+		}
+		total
+	}
+}
