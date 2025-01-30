@@ -24,11 +24,11 @@ import {
 } from "@/components/ui/select";
 import createTransactionMutation from "@/graphql/createTransaction.graphql";
 import { cn } from "@/utils/conditional";
-import { createRefetchQueries } from "@/utils/createRefetchQueries";
 import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -47,14 +47,16 @@ interface TransactionFormProps {
 }
 
 const TransactionForm = ({ data: categories }: TransactionFormProps) => {
-	const [createTransaction, { loading, error }] = useMutation(
+	const [createTransaction, { data, loading, error }] = useMutation(
 		createTransactionMutation,
-		{
-			refetchQueries: ({ data }) => createRefetchQueries(data),
-		},
+		// {
+		// 	refetchQueries: ({ data }) => createRefetchQueries(data),
+		// },
 	);
 
 	const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+	const router = useRouter();
 
 	const form = useForm({
 		resolver: zodResolver(schema),
@@ -66,8 +68,8 @@ const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 		},
 	});
 
-	const handleSubmit = (data: any) => {
-		createTransaction({
+	const handleSubmit = async (data: any) => {
+		await createTransaction({
 			variables: {
 				input: {
 					item: data.item,
@@ -78,6 +80,8 @@ const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 				},
 			},
 		});
+
+		router.refresh();
 
 		form.reset();
 	};

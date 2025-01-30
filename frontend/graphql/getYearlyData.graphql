@@ -1,0 +1,25 @@
+query ($year: Int!, $range: RangeInput) {
+	TransactionsByMonth(year: $year) {
+		total
+		categories {
+			total
+			name
+			transactions {
+				id
+				item
+				amount
+				date
+				category {
+					id
+					name
+				}
+			}
+		}
+	}
+	Categories(range: $range) {
+		id
+		name
+		total(range: $range)
+	}
+	Years
+}

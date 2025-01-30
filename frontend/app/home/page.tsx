@@ -7,10 +7,8 @@ import Tabs from "@/components/dashboard/Tabs";
 import TransactionForm from "@/components/dashboard/TransactionForm";
 import { columns } from "@/components/dashboard/transactions/columns";
 import { DataTable } from "@/components/dashboard/transactions/DataTable";
-import getCategories from "@/graphql/getCategories.graphql";
 import getLastDate from "@/graphql/getLastDate.graphql";
-import transactionsByMonth from "@/graphql/getTransactionsByMonth.graphql";
-import getYears from "@/graphql/getYears.graphql";
+import getYearlyData from "@/graphql/getYearlyData.graphql";
 import { getClient } from "@/lib/client";
 import { getMonthAndYear } from "@/utils/getMonthAndYear";
 import { createClient } from "@/utils/supabase/server";
@@ -51,42 +49,30 @@ export default async function Page({
 	const selectedCategory = category;
 	const selectedTab = Number(tab);
 
-	const {
-		data: { TransactionsByMonth: d },
-	} = await apollo.query({
-		query: transactionsByMonth,
-		variables: { year: selectedYear },
-		fetchPolicy: "no-cache",
-	});
-
-	const {
-		data: { Years },
-	} = await apollo.query({ query: getYears });
-
 	// const {
 	// 	data: { session },
 	// } = await supabase.auth.getSession();
 	// console.log(session?.access_token);
 
 	const {
-		data: { Categories },
+		data: { TransactionsByMonth: d, Categories, Years },
 	} = await apollo.query({
-		query: getCategories,
-		variables: { range: getRange(undefined, selectedYear) },
+		query: getYearlyData,
+		variables: { year: selectedYear, range: getRange(undefined, selectedYear) },
 	});
 
-	const nameToIdMap = Categories.reduce((map, category) => {
-		map[category.name] = category.id;
-		return map;
-	}, {});
+	const selectedCategoryId = Categories.find(
+		(cat) => cat.name === selectedCategory,
+	)?.id;
 
 	const categoryTotals = Categories.map((category) => {
 		return {
 			category: category.name,
 			amount:
 				selectedMonth !== undefined
-					? (d[selectedMonth].categories.find((cat) => cat.id === category.id)
-							?.total ?? 0)
+					? (d[selectedMonth].categories.find(
+							(cat) => cat.name === category.name,
+						)?.total ?? 0)
 					: (category.total ?? 0),
 			fill: `var(--color-${category.name})`,
 		};
@@ -147,9 +133,7 @@ export default async function Page({
 						<PieGraph
 							data={categoryTotals}
 							total={total}
-							activeIndex={
-								selectedCategory ? nameToIdMap[selectedCategory] - 1 : -1
-							}
+							activeIndex={selectedCategory ? selectedCategoryId - 1 : -1}
 							selectedCategory={selectedCategory}
 							selectedMonth={selectedMonth}
 							selectedYear={selectedYear}

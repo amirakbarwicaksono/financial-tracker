@@ -2,6 +2,6 @@ query ($range: RangeInput) {
 	Categories(range: $range) {
 		id
 		name
-		total(range: $range)
+		# total(range: $range)
 	}
 }

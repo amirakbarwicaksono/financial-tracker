@@ -29,6 +29,7 @@ import { useMutation } from "@apollo/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { MoreHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 // This type is used to define the shape of our data.
@@ -115,9 +116,12 @@ export const columns: ColumnDef<Transaction>[] = [
 const Cell = ({ row }: { row: Row<Transaction> }) => {
 	const transaction = row.original;
 	const [deleteItem, { loading: deleteLoading, error: deleteError }] =
-		useMutation(deleteTransactionMutation, {
-			refetchQueries: ({ data }) => createRefetchQueries(data),
-		});
+		useMutation(
+			deleteTransactionMutation,
+			// 	{
+			// 	refetchQueries: ({ data }) => createRefetchQueries(data),
+			// }
+		);
 
 	const [updateItem, { loading: updateLoading, error: updateError }] =
 		useMutation(updateTransactionMutation, {
@@ -125,8 +129,8 @@ const Cell = ({ row }: { row: Row<Transaction> }) => {
 				createRefetchQueries(data, transaction.date),
 		});
 
-	const handleSubmit = (data: any) => {
-		updateItem({
+	const handleSubmit = async (data: any) => {
+		await updateItem({
 			variables: {
 				id: transaction.id,
 				input: {
@@ -138,6 +142,7 @@ const Cell = ({ row }: { row: Row<Transaction> }) => {
 				},
 			},
 		});
+		router.refresh();
 	};
 
 	enum Dialogs {
@@ -146,6 +151,7 @@ const Cell = ({ row }: { row: Row<Transaction> }) => {
 	}
 
 	const [dialog, setDialog] = useState<Dialogs>();
+	const router = useRouter();
 
 	if (deleteLoading) return "Deleting...";
 	if (deleteError) return deleteError.message;
@@ -209,8 +215,9 @@ const Cell = ({ row }: { row: Row<Transaction> }) => {
 					</DialogHeader>
 					<DialogFooter>
 						<Button
-							onClick={() => {
-								deleteItem({ variables: { id: transaction.id } });
+							onClick={async () => {
+								await deleteItem({ variables: { id: transaction.id } });
+								router.refresh();
 							}}
 							type="submit"
 						>
