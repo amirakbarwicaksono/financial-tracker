@@ -11,10 +11,16 @@ import { useRouter } from "next/navigation";
 import { Label, Legend, Pie, PieChart, Sector } from "recharts";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";
 
+interface DataType {
+	category: string;
+	amount: number;
+	fill: string;
+}
+
 interface PieGraphProps {
-	data: any;
-	total: any;
-	activeIndex: any;
+	data: DataType[];
+	total?: number;
+	activeIndex: number;
 	selectedCategory?: string;
 	selectedMonth?: number;
 	selectedYear: number;
@@ -28,6 +34,7 @@ const PieGraph = ({
 	selectedMonth,
 	selectedYear,
 }: PieGraphProps) => {
+	// console.log(`PieGraph rendered at: ${new Date().toLocaleTimeString()}`);
 	const COLORS = [
 		"#e6194B",
 		"#f58231",
@@ -47,14 +54,21 @@ const PieGraph = ({
 		"#ffffff",
 	];
 
-	const chartConfig = data.reduce((acc: any, data: any, index: any) => {
-		const category = data.category;
-		acc[category] = {
-			label: category,
-			color: COLORS[index % COLORS.length],
-		};
-		return acc;
-	}, {}) satisfies ChartConfig;
+	const chartConfig = data.reduce(
+		(
+			acc: Record<string, Record<string, string>>,
+			data: DataType,
+			index: number,
+		) => {
+			const category = data.category;
+			acc[category] = {
+				label: category,
+				color: COLORS[index % COLORS.length],
+			};
+			return acc;
+		},
+		{},
+	) satisfies ChartConfig;
 
 	chartConfig["amount"] = { label: "Amount" };
 
@@ -78,7 +92,6 @@ const PieGraph = ({
 				<Pie
 					onClick={(_, index) => {
 						const categoryID = data[index]?.category;
-						console.log(categoryID, selectedCategory);
 						if (selectedCategory !== categoryID) {
 							router.push(
 								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&category=${categoryID}`,

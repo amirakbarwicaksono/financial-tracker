@@ -5,14 +5,13 @@ import PieGraph from "@/components/dashboard/PieGraph";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Tabs from "@/components/dashboard/Tabs";
 import TransactionForm from "@/components/dashboard/TransactionForm";
-import { columns } from "@/components/dashboard/transactions/columns";
 import { DataTable } from "@/components/dashboard/transactions/DataTable";
-import getLastDate from "@/graphql/getLastDate.graphql";
-import getYearlyData from "@/graphql/getYearlyData.graphql";
-import { getClient } from "@/lib/client";
+import { getLastDate, getYearlyData } from "@/lib/actions";
+import { UserMetadata } from "@/types/types";
 import { getMonthAndYear } from "@/utils/getMonthAndYear";
 import { createClient } from "@/utils/supabase/server";
 import { format } from "date-fns";
+
 import { getRange } from "../../utils/getRange";
 
 export default async function Page({
@@ -24,18 +23,15 @@ export default async function Page({
 	const {
 		data: { user },
 	} = await supabase.auth.getUser();
+	const userData = user?.user_metadata as UserMetadata;
 
-	const userData = user?.user_metadata;
-
-	const apollo = getClient();
 	const { year, month, category, tab = 1 } = await searchParams;
-
 	let selectedYear, selectedMonth;
+
 	if (!year) {
-		const {
-			data: { LastDate },
-		} = await apollo.query({ query: getLastDate });
-		const { month, year } = getMonthAndYear(LastDate);
+		const lastDate = await getLastDate();
+
+		const { month, year } = getMonthAndYear(lastDate);
 		selectedYear = year ? year : 1;
 		selectedMonth = month ?? undefined;
 	} else {
@@ -54,12 +50,8 @@ export default async function Page({
 	// } = await supabase.auth.getSession();
 	// console.log(session?.access_token);
 
-	const {
-		data: { TransactionsByMonth: d, Categories, Years },
-	} = await apollo.query({
-		query: getYearlyData,
-		variables: { year: selectedYear, range: getRange(undefined, selectedYear) },
-	});
+	const range = getRange(undefined, selectedYear);
+	const { d, Categories, Years } = await getYearlyData(selectedYear, range);
 
 	const selectedCategoryId = Categories.find(
 		(cat) => cat.name === selectedCategory,
@@ -78,6 +70,8 @@ export default async function Page({
 		};
 	});
 
+	// console.log(d);
+
 	const total =
 		selectedMonth !== undefined && selectedCategory
 			? d[selectedMonth].categories.find((cat) => cat.name === selectedCategory)
@@ -85,7 +79,7 @@ export default async function Page({
 			: selectedMonth !== undefined
 				? d[selectedMonth].total
 				: selectedCategory
-					? Categories.find((cat) => cat.name === selectedCategory).total
+					? Categories.find((cat) => cat.name === selectedCategory)?.total
 					: d.reduce((acc, month) => acc + month.total, 0);
 
 	const transactions =
@@ -133,7 +127,9 @@ export default async function Page({
 						<PieGraph
 							data={categoryTotals}
 							total={total}
-							activeIndex={selectedCategory ? selectedCategoryId - 1 : -1}
+							activeIndex={
+								selectedCategoryId ? Number(selectedCategoryId) - 1 : -1
+							}
 							selectedCategory={selectedCategory}
 							selectedMonth={selectedMonth}
 							selectedYear={selectedYear}
@@ -162,7 +158,7 @@ export default async function Page({
 					<div
 						className={` ${selectedTab === 1 ? "max-lg:md:col-span-9" : "max-lg:md:hidden"} ${selectedTab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 lg:col-span-7`}
 					>
-						<DataTable columns={columns} data={transactions} />
+						<DataTable categories={Categories} data={transactions} />
 					</div>
 				</div>
 			</div>

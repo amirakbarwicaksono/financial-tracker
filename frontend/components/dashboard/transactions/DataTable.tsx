@@ -13,8 +13,11 @@ import {
 	VisibilityState,
 } from "@tanstack/react-table";
 
+import Cell from "@/components/dashboard/transactions/Cell";
+import { DataTableColumnHeader } from "@/components/dashboard/transactions/DataTableColumnHeader";
 import { DataTablePagination } from "@/components/dashboard/transactions/DataTablePagination";
 import { DataTableViewOptions } from "@/components/dashboard/transactions/DataTableViewOptions";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -25,17 +28,103 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { Category, Transaction } from "@/types/types";
+import { format } from "date-fns";
 import { useState } from "react";
 
-interface DataTableProps<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[];
+interface DataTableProps<TData> {
+	categories: Category[];
+	// columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 }
 
-export function DataTable<TData, TValue>({
-	columns,
+export function DataTable<TData>({
+	// columns,
+	categories,
 	data,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
+	// console.log(`Table rendered at: ${new Date().toLocaleTimeString()}`);
+	const columns: ColumnDef<TData>[] = [
+		{
+			id: "select",
+			header: ({ table }) => (
+				<Checkbox
+					checked={
+						table.getIsAllPageRowsSelected() ||
+						(table.getIsSomePageRowsSelected() && "indeterminate")
+					}
+					onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+					aria-label="Select all"
+				/>
+			),
+			cell: ({ row }) => (
+				<Checkbox
+					checked={row.getIsSelected()}
+					onCheckedChange={(value) => row.toggleSelected(!!value)}
+					aria-label="Select row"
+				/>
+			),
+			enableSorting: false,
+			enableHiding: false,
+		},
+		{
+			accessorKey: "date",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} title="Date" />
+			),
+			cell: ({ row }) => {
+				const date: string = row.getValue("date");
+				const formatted = format(new Date(date), "dd-MMM-yy");
+
+				return <div>{formatted}</div>;
+			},
+		},
+		{
+			accessorKey: "item",
+			header: "Item",
+			cell: ({ row }) => {
+				const item = row.getValue("item") as string;
+				return (
+					<div>
+						{item
+							.split(" ")
+							.map(
+								(word) =>
+									word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+							)
+							.join(" ")}
+					</div>
+				);
+			},
+		},
+		{
+			accessorKey: "category",
+			header: "Category",
+			cell: ({ row }) => {
+				const { name }: Transaction["category"] = row.getValue("category");
+				return <div>{name}</div>;
+			},
+		},
+		{
+			accessorKey: "amount",
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} title="Amount" />
+			),
+			cell: ({ row }) => {
+				const amount = parseFloat(row.getValue("amount"));
+				const formatted = new Intl.NumberFormat("en-IN", {
+					style: "currency",
+					currency: "INR",
+				}).format(amount);
+
+				return <div>{formatted}</div>;
+			},
+		},
+		{
+			id: "actions",
+			cell: ({ row }) => <Cell row={row} categories={categories} />,
+		},
+	];
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});

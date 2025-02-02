@@ -7,15 +7,16 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { UserMetadata } from "@/types/types";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 interface NavbarProps {
-	userData: any;
-	data: any;
+	userData?: UserMetadata;
+	data: number[];
 	selectedYear: number;
-	selectedCategory: any;
-	selectedMonth: any;
+	selectedCategory: string | undefined;
+	selectedMonth: number | undefined;
 }
 
 const Navbar = ({
@@ -26,7 +27,7 @@ const Navbar = ({
 	selectedMonth,
 }: NavbarProps) => {
 	const router = useRouter();
-
+	// console.log(`Navbar rendered at: ${new Date().toLocaleTimeString()}`);
 	return (
 		userData && (
 			<nav className="bubble flex h-12 items-center justify-between">

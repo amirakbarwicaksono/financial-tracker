@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import CategorySelect from "@/components/dashboard/forms/CategorySelect";
+import DatePicker from "@/components/dashboard/forms/DatePicker";
 import {
 	Form,
 	FormControl,
@@ -8,71 +8,46 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-
-import categoriesQuery from "@/graphql/getCategories.graphql";
-import { cn } from "@/utils/conditional";
-import { useSuspenseQuery } from "@apollo/client";
+import { formSchema } from "@/schemas/formSchema";
+import { Category } from "@/types/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { PropsWithChildren, useState } from "react";
+import { PropsWithChildren } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 
 interface EditFormProps {
-	id?: number;
-	item?: string;
-	amount?: number;
-	category?: {
+	id: number;
+	item: string;
+	amount: number;
+	category: {
 		id: number;
 		name: string;
 	};
-	date?: string;
-	handleSubmit: (data: any) => void;
+	date: string;
+	handleSubmit: (data: {
+		item: string;
+		amount: number;
+		category: string;
+		date: Date;
+	}) => Promise<void>;
+	categories: Category[];
 }
-const schema = z.object({
-	item: z.string().min(1, "Item is required"),
-	amount: z.number().positive("Amount must be positive"),
-	category: z.string().nonempty("Category is required"),
-	date: z.date({
-		required_error: "Date is required.",
-	}),
-});
 
 const EditForm = ({
-	id,
 	item,
 	amount,
 	category,
 	date,
 	handleSubmit,
+	categories,
 	children,
 }: EditFormProps & PropsWithChildren) => {
-	const {
-		data: { Categories: categories },
-	} = useSuspenseQuery<any>(categoriesQuery);
-
-	const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
 	const form = useForm({
-		resolver: zodResolver(schema),
+		resolver: zodResolver(formSchema),
 		defaultValues: {
-			item: item ?? "",
-			amount: amount ?? "",
-			category: category?.id.toString(),
-			date: new Date(date ?? ""),
+			item: item,
+			amount: amount,
+			category: category.id.toString(),
+			date: new Date(date),
 		},
 	});
 
@@ -118,74 +93,14 @@ const EditForm = ({
 						name="category"
 						control={form.control}
 						render={({ field }) => (
-							<FormItem>
-								<Select
-									value={field.value?.toString()}
-									onValueChange={field.onChange}
-								>
-									<FormControl>
-										<SelectTrigger>
-											<SelectValue placeholder="Category" />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent className="h-[40vh]">
-										{categories.map((category: any) => (
-											<SelectItem
-												key={category.id}
-												value={category.id.toString()}
-											>
-												{category.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								<FormMessage />
-							</FormItem>
+							<CategorySelect field={field} categories={categories} />
 						)}
 					/>
 
 					<FormField
 						name="date"
 						control={form.control}
-						render={({ field }) => (
-							<FormItem className="flex flex-col">
-								<Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-									<PopoverTrigger asChild>
-										<FormControl>
-											<Button
-												variant={"outline"}
-												className={cn(
-													"bg-transparent pl-3 text-left font-normal",
-													!field.value && "text-muted-foreground",
-												)}
-											>
-												{field.value ? (
-													format(field.value, "PPP")
-												) : (
-													<span>Date</span>
-												)}
-												<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-											</Button>
-										</FormControl>
-									</PopoverTrigger>
-									<PopoverContent className="w-auto p-0" align="start">
-										<Calendar
-											mode="single"
-											selected={new Date(field.value)}
-											onSelect={(date) => {
-												field.onChange(date);
-												setIsPopoverOpen(false);
-											}}
-											disabled={(date) =>
-												date > new Date() || date < new Date("1900-01-01")
-											}
-											autoFocus
-										/>
-									</PopoverContent>
-								</Popover>
-								<FormMessage />
-							</FormItem>
-						)}
+						render={({ field }) => <DatePicker field={field} />}
 					/>
 
 					<div className="flex-grow" />

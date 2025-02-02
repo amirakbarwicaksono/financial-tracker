@@ -5,7 +5,7 @@ import { registerApolloClient } from "@apollo/experimental-nextjs-app-support";
 
 const httpLink = new HttpLink({
 	uri: process.env.NEXT_PUBLIC_SERVER,
-	// fetchOptions: { cache: "no-cache" },
+	// fetchOptions: { cache: "cache-first" },
 });
 
 const authLink = setContext(async (_, { headers }) => {

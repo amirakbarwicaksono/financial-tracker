@@ -1,7 +1,8 @@
 "use client";
 
+import CategorySelect from "@/components/dashboard/forms/CategorySelect";
+import DatePicker from "@/components/dashboard/forms/DatePicker";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
 	Form,
 	FormControl,
@@ -10,79 +11,52 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import createTransactionMutation from "@/graphql/createTransaction.graphql";
-import { cn } from "@/utils/conditional";
-import { useMutation } from "@apollo/client";
+import { createTransaction } from "@/lib/actions";
+import { formSchema } from "@/schemas/formSchema";
+import { Category } from "@/types/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-const schema = z.object({
-	item: z.string().min(1, "Item is required"),
-	amount: z.number().positive("Amount must be positive"),
-	category: z.string().nonempty("Category is required"),
-	date: z.date({
-		required_error: "Date is required.",
-	}),
-});
 
 interface TransactionFormProps {
-	data: any;
+	data: Category[];
 }
 
 const TransactionForm = ({ data: categories }: TransactionFormProps) => {
-	const [createTransaction, { data, loading, error }] = useMutation(
-		createTransactionMutation,
-		// {
-		// 	refetchQueries: ({ data }) => createRefetchQueries(data),
-		// },
-	);
-
-	const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
-	const router = useRouter();
+	// console.log(`Form rendered at: ${new Date().toLocaleTimeString()}`);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<null | string>(null);
 
 	const form = useForm({
-		resolver: zodResolver(schema),
+		resolver: zodResolver(formSchema),
 		defaultValues: {
 			item: "",
 			amount: "",
 			category: "",
-			date: undefined,
+			date: "",
 		},
 	});
 
-	const handleSubmit = async (data: any) => {
-		await createTransaction({
-			variables: {
-				input: {
-					item: data.item,
-					categoryID: data.category,
-					isIncome: false,
-					date: data.date,
-					amount: data.amount,
-				},
+	const handleSubmit = async (data: {
+		item: string;
+		category: string;
+		amount: string;
+		date: string;
+	}) => {
+		setLoading(true);
+		console.log(data);
+		const { error } = await createTransaction({
+			input: {
+				item: data.item,
+				categoryID: data.category,
+				isIncome: false,
+				date: format(data.date, "yyyy-MM-dd"),
+				amount: Number(data.amount),
 			},
 		});
-
-		router.refresh();
-
+		setLoading(false);
+		setError(error);
 		form.reset();
 	};
 
@@ -128,71 +102,14 @@ const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 						name="category"
 						control={form.control}
 						render={({ field }) => (
-							<FormItem>
-								<Select value={field.value} onValueChange={field.onChange}>
-									<FormControl>
-										<SelectTrigger>
-											<SelectValue placeholder="Category" />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent>
-										{categories.map((category: any) => (
-											<SelectItem
-												key={category.id}
-												value={category.id.toString()}
-											>
-												{category.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								<FormMessage />
-							</FormItem>
+							<CategorySelect field={field} categories={categories} />
 						)}
 					/>
 
 					<FormField
 						name="date"
 						control={form.control}
-						render={({ field }) => (
-							<FormItem className="flex flex-col">
-								<Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-									<PopoverTrigger asChild>
-										<FormControl>
-											<Button
-												variant={"outline"}
-												className={cn(
-													"bg-transparent pl-3 text-left font-normal",
-													!field.value && "text-muted-foreground",
-												)}
-											>
-												{field.value ? (
-													format(field.value, "PPP")
-												) : (
-													<span>Date</span>
-												)}
-												<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-											</Button>
-										</FormControl>
-									</PopoverTrigger>
-									<PopoverContent className="w-auto p-0" align="start">
-										<Calendar
-											mode="single"
-											selected={field.value}
-											onSelect={(date) => {
-												field.onChange(date);
-												setIsPopoverOpen(false);
-											}}
-											disabled={(date) =>
-												date > new Date() || date < new Date("1900-01-01")
-											}
-											autoFocus
-										/>
-									</PopoverContent>
-								</Popover>
-								<FormMessage />
-							</FormItem>
-						)}
+						render={({ field }) => <DatePicker field={field} />}
 					/>
 
 					<div className="flex-grow" />
@@ -200,7 +117,7 @@ const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 						{loading ? "Submitting..." : "Add Transaction"}
 					</Button>
 					{error && (
-						<p className="text-red-500">{`Submission error: ${error.message}`}</p>
+						<p className="text-red-500">{`Submission error: ${error}`}</p>
 					)}
 				</form>
 			</Form>

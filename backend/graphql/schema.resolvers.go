@@ -267,6 +267,8 @@ func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*m
 				Total: &total,
 			}
 			monthCategoryMap[group.Month][group.CategoryID] = category
+		} else {
+			*category.Total += group.CategoryTotal
 		}
 
 		// Add the transaction to the category
