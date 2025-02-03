@@ -9,21 +9,15 @@ import { DataTable } from "@/components/dashboard/transactions/DataTable";
 import { getLastDate, getYearlyData } from "@/lib/actions";
 import { UserMetadata } from "@/types/types";
 import { getMonthAndYear } from "@/utils/getMonthAndYear";
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/getUser";
 import { format } from "date-fns";
-
-import { getRange } from "../../utils/getRange";
 
 export default async function Page({
 	searchParams,
 }: {
 	searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-	const userData = user?.user_metadata as UserMetadata;
+	const { user_metadata } = await getUser();
 
 	const { year, month, category, tab = 1 } = await searchParams;
 	let selectedYear, selectedMonth;
@@ -45,13 +39,7 @@ export default async function Page({
 	const selectedCategory = category;
 	const selectedTab = Number(tab);
 
-	// const {
-	// 	data: { session },
-	// } = await supabase.auth.getSession();
-	// console.log(session?.access_token);
-
-	const range = getRange(undefined, selectedYear);
-	const { d, Categories, Years } = await getYearlyData(selectedYear, range);
+	const { d, Categories, Years } = await getYearlyData(selectedYear);
 
 	const selectedCategoryId = Categories.find(
 		(cat) => cat.name === selectedCategory,
@@ -69,8 +57,6 @@ export default async function Page({
 			fill: `var(--color-${category.name})`,
 		};
 	});
-
-	// console.log(d);
 
 	const total =
 		selectedMonth !== undefined && selectedCategory
@@ -113,7 +99,7 @@ export default async function Page({
 			<Sidebar />
 			<div className="flex w-full flex-grow flex-col gap-2 p-2">
 				<Navbar
-					userData={userData}
+					userData={user_metadata as UserMetadata}
 					data={Years}
 					selectedYear={selectedYear}
 					selectedCategory={selectedCategory}

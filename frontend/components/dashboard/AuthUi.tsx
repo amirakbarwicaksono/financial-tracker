@@ -13,6 +13,7 @@ const AuthUi = () => (
 		providers={["google"]}
 		redirectTo={`${process.env.NEXT_PUBLIC_REDIRECT_URL}/auth/callback/`}
 		theme="dark"
+		// onlyThirdPartyProviders
 	/>
 );
 

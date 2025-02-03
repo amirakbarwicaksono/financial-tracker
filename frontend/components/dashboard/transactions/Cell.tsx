@@ -41,7 +41,6 @@ const Cell = <TData,>({ row, categories }: CellProps<TData>) => {
 		amount: number;
 		date: Date;
 	}) => {
-		const oldYear = format(transaction.date, "yyyy");
 		setUpdateLoading(true);
 		const { error } = await updateTransactions(
 			{
@@ -53,7 +52,7 @@ const Cell = <TData,>({ row, categories }: CellProps<TData>) => {
 					date: format(data.date, "yyyy-MM-dd"),
 				},
 			},
-			oldYear,
+			transaction.date,
 		);
 		setUpdateLoading(false);
 		setUpdateError(error);

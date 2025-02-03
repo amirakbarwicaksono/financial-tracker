@@ -33,8 +33,8 @@ const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 		defaultValues: {
 			item: "",
 			amount: "",
-			category: "",
-			date: "",
+			category: "1",
+			date: new Date(),
 		},
 	});
 
@@ -42,10 +42,9 @@ const TransactionForm = ({ data: categories }: TransactionFormProps) => {
 		item: string;
 		category: string;
 		amount: string;
-		date: string;
+		date: Date;
 	}) => {
 		setLoading(true);
-		console.log(data);
 		const { error } = await createTransaction({
 			input: {
 				item: data.item,

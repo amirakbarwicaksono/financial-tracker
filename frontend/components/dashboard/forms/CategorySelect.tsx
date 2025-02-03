@@ -9,18 +9,18 @@ import {
 import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 
 // Define a type for the two possible forms
-type FormWithDateAsDate = {
+type FormWithAmountAsNumber = {
 	item: string;
 	amount: number;
 	category: string;
 	date: Date;
 };
 
-type FormWithDateAsString = {
+type FormWithAmountAsString = {
 	item: string;
 	amount: string;
 	category: string;
-	date: string;
+	date: Date;
 };
 
 // The CategorySelectProps will accept either form type with the "category" field as a key.
@@ -30,7 +30,7 @@ type CategorySelectProps<TFormValues extends FieldValues> = {
 };
 
 const CategorySelect = <
-	TFormValues extends FormWithDateAsDate | FormWithDateAsString,
+	TFormValues extends FormWithAmountAsNumber | FormWithAmountAsString,
 >({
 	field,
 	categories,

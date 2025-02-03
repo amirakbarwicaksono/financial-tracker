@@ -201,6 +201,7 @@ func (r *queryResolver) Transaction(ctx context.Context, id int) (*model.Transac
 
 // TransactionsByMonth is the resolver for the TransactionsByMonth field.
 func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*model.MonthSummary, error) {
+	fmt.Println("Month: ", time.Now())
 	userId, err := getUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
