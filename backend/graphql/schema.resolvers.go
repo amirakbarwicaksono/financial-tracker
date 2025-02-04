@@ -6,36 +6,20 @@ package graphql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"time"
 
 	"github.com/aashish47/finance-tracker/backend/graphql/model"
-	"github.com/aashish47/finance-tracker/backend/middleware"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/aashish47/finance-tracker/backend/utils"
 	"gorm.io/gorm"
 )
-
-// Helper function to extract user ID from JWT claims
-func getUserIDFromContext(ctx context.Context) (string, error) {
-	key := middleware.ContextKeyClaims
-	claims, ok := ctx.Value(key).(jwt.MapClaims)
-	if !ok {
-		return "", errors.New("failed to retrieve claims from context")
-	}
-
-	userId, ok := claims["sub"].(string)
-	if !ok {
-		return "", errors.New("user id not found in claims")
-	}
-
-	return userId, nil
-}
 
 // Transactions is the resolver for the transactions field.
 func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
 	if obj.Transactions == nil {
+		fmt.Println("Category Transactions: ", time.Now().Format("15:04:05"))
+
 		transactions := []*model.Transaction{}
 		query := r.DB.Where("category_id = ?", obj.ID)
 
@@ -55,6 +39,7 @@ func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category
 // Total is the resolver for the total field.
 func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) (*float64, error) {
 	if obj.Total == nil {
+		fmt.Println("Category Total: ", time.Now().Format("15:04:05"))
 
 		var total float64
 		query := r.DB.Model(&model.Transaction{}).Where("category_id = ?", obj.ID)
@@ -74,7 +59,8 @@ func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, range
 
 // CreateTransaction is the resolver for the createTransaction field.
 func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.TransactionInput) (*model.Transaction, error) {
-	userId, err := getUserIDFromContext(ctx)
+	userId, err := utils.GetUserIDFromContext(ctx)
+
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +130,9 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (*mode
 
 // Transactions is the resolver for the Transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
-	userId, err := getUserIDFromContext(ctx)
+	fmt.Println("Transactions: ", time.Now().Format("15:04:05"))
+
+	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +173,7 @@ func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeI
 
 // Transaction is the resolver for the Transaction field.
 func (r *queryResolver) Transaction(ctx context.Context, id int) (*model.Transaction, error) {
-	userId, err := getUserIDFromContext(ctx)
+	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -201,8 +189,8 @@ func (r *queryResolver) Transaction(ctx context.Context, id int) (*model.Transac
 
 // TransactionsByMonth is the resolver for the TransactionsByMonth field.
 func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*model.MonthSummary, error) {
-	fmt.Println("Month: ", time.Now())
-	userId, err := getUserIDFromContext(ctx)
+	fmt.Println("TransactionsByMonth: ", time.Now().Format("15:04:05"))
+	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -324,8 +312,11 @@ func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*m
 	return monthSummaries, nil
 }
 
+// Categories is the resolver for the Categories field.
 func (r *queryResolver) Categories(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Category, error) {
-	userId, err := getUserIDFromContext(ctx)
+	fmt.Println("Categories: ", time.Now().Format("15:04:05"))
+
+	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +427,9 @@ func (r *queryResolver) Category(ctx context.Context, id int, rangeArg *model.Ra
 
 // Years is the resolver for the Years field.
 func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
-	userId, err := getUserIDFromContext(ctx)
+	fmt.Println("Years: ", time.Now().Format("15:04:05"))
+
+	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +455,9 @@ func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
 
 // LastDate is the resolver for the LastDate field.
 func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
-	userId, err := getUserIDFromContext(ctx)
+	fmt.Println("LastDate: ", time.Now().Format("15:04:05"))
+
+	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -484,10 +479,35 @@ func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
 	return result, nil
 }
 
+// Total is the resolver for the Total field.
+func (r *queryResolver) Total(ctx context.Context, rangeArg *model.RangeInput) (*float64, error) {
+	fmt.Println("Total: ", time.Now().Format("15:04:05"))
+
+	userId, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var total float64
+	query := r.DB.Model(&model.Transaction{}).Where("user_id = ?", userId)
+
+	if rangeArg != nil {
+		query.Where("date Between ? AND ?", rangeArg.StartDate, rangeArg.EndDate)
+	}
+
+	if err := query.Select("COALESCE(SUM(amount), 0)").Scan(&total).Error; err != nil {
+		return nil, err
+	}
+
+	return &total, nil
+
+}
+
 // Category is the resolver for the category field.
 func (r *transactionResolver) Category(ctx context.Context, obj *model.Transaction) (*model.Category, error) {
-
 	if obj.Category == nil {
+		fmt.Println("Transactions Category: ", time.Now().Format("15:04:05"))
+
 		category := &model.Category{}
 		if err := r.DB.First(&category, obj.CategoryID).Error; err != nil {
 			return nil, err

@@ -25,10 +25,13 @@ export const request = async (
 		},
 	});
 
-	if (!response.ok) {
-		throw new Error("Error in response");
-	}
-
 	const responseData = await response.json();
-	return responseData;
+
+	if (response.ok) {
+		return responseData.data;
+	} else {
+		throw new Error(
+			`GraphQL query failed: ${responseData.errors?.[0]?.message}`,
+		);
+	}
 };

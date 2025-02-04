@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 ::-webkit-scrollbar {
-	@apply h-3 w-3;
+	@apply h-2 w-2;
 }
 
 ::-webkit-scrollbar-thumb {
-	@apply bubble hover:bg-opacity-10;
+	@apply rounded-lg bg-accent hover:bg-opacity-10;
 }
 
 .border-thin {
@@ -23,38 +23,12 @@
 }
 
 .tab-active {
-	@apply bg-sky-400;
+	@apply bg-primary;
 }
 
-.tab-unactive {
-	@apply hover:bg-sky-500 active:bg-sky-600;
+.tab-inactive {
+	@apply hover:bg-accent;
 }
-/* 
-th,
-td {
-    @apply p-2 border-b border-r border-white border-opacity-10 whitespace-nowrap;
-}
-
-th {
-    @apply border-t;
-}
-
-th:first-child,
-td:first-child {
-    @apply border-l;
-}
-
-tbody tr {
-    @apply even:bg-white even:bg-opacity-5 font-extralight;
-} */
-
-/* .tooltip {
-	@apply rounded-lg border bg-neutral-950 p-2 text-inherit;
-} */
-
-/* .recharts-legend-item {
-	@apply text-sm 2xl:text-3xl;
-} */
 
 .recharts-legend-wrapper {
 	@apply !max-h-full !w-1/2 !overflow-auto;
@@ -123,5 +97,8 @@ tbody tr {
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+	#calendar tr {
+		@apply justify-center;
 	}
 }

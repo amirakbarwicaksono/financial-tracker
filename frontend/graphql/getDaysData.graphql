@@ -1,0 +1,13 @@
+query ($range: RangeInput) {
+	Transactions(range: $range) {
+		id
+		item
+		amount
+		date
+		category {
+			id
+			name
+		}
+	}
+	Total(range: $range)
+}

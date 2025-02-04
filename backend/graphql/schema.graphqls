@@ -29,6 +29,7 @@ type Query {
 	Category(id: ID!, range: RangeInput): Category
 	Years: [Int]
 	LastDate: String
+	Total(range: RangeInput): Float
 }
 
 type Mutation {

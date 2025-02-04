@@ -24,6 +24,7 @@ interface PieGraphProps {
 	selectedCategory?: string;
 	selectedMonth?: number;
 	selectedYear: number;
+	selectedDate: string;
 }
 
 const PieGraph = ({
@@ -33,6 +34,7 @@ const PieGraph = ({
 	selectedCategory,
 	selectedMonth,
 	selectedYear,
+	selectedDate,
 }: PieGraphProps) => {
 	// console.log(`PieGraph rendered at: ${new Date().toLocaleTimeString()}`);
 	const COLORS = [
@@ -94,11 +96,11 @@ const PieGraph = ({
 						const categoryID = data[index]?.category;
 						if (selectedCategory !== categoryID) {
 							router.push(
-								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&category=${categoryID}`,
+								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&category=${categoryID}&date=${selectedDate}`,
 							);
 						} else {
 							router.push(
-								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}`,
+								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&date=${selectedDate}`,
 							);
 						}
 					}}

@@ -17,6 +17,7 @@ interface NavbarProps {
 	selectedYear: number;
 	selectedCategory: string | undefined;
 	selectedMonth: number | undefined;
+	selectedDate: string;
 }
 
 const Navbar = ({
@@ -25,6 +26,7 @@ const Navbar = ({
 	selectedYear,
 	selectedCategory,
 	selectedMonth,
+	selectedDate,
 }: NavbarProps) => {
 	const router = useRouter();
 	// console.log(`Navbar rendered at: ${new Date().toLocaleTimeString()}`);
@@ -36,7 +38,7 @@ const Navbar = ({
 				<Select
 					onValueChange={(value) =>
 						router.push(
-							`/home?year=${value}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}${selectedCategory ? `&category=${selectedCategory}` : ""}`,
+							`/home?year=${value}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}${selectedCategory ? `&category=${selectedCategory}` : ""}&date=${selectedDate}`,
 						)
 					}
 					value={selectedYear.toString()}
@@ -57,13 +59,15 @@ const Navbar = ({
 				<div className="flex items-center justify-end gap-2 md:gap-4 md:text-lg">
 					<p className="hidden capitalize md:block">{userData.name}</p>
 
-					<Image
-						className="rounded-full"
-						src={userData.picture}
-						alt="profile picture"
-						width={32}
-						height={32}
-					/>
+					{userData.picture && (
+						<Image
+							className="rounded-full"
+							src={userData.picture}
+							alt="profile picture"
+							width={32}
+							height={32}
+						/>
+					)}
 				</div>
 			</nav>
 		)

@@ -1,12 +1,12 @@
-import Accounts from "@/components/dashboard/Accounts";
 import BarGraph from "@/components/dashboard/BarGraph";
+import DayData from "@/components/dashboard/DayData";
 import Navbar from "@/components/dashboard/Navbar";
 import PieGraph from "@/components/dashboard/PieGraph";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Tabs from "@/components/dashboard/Tabs";
 import TransactionForm from "@/components/dashboard/TransactionForm";
 import { DataTable } from "@/components/dashboard/transactions/DataTable";
-import { getLastDate, getYearlyData } from "@/lib/actions";
+import { getDaysData, getLastDate, getYearlyData } from "@/lib/actions";
 import { UserMetadata } from "@/types/types";
 import { getMonthAndYear } from "@/utils/getMonthAndYear";
 import { getUser } from "@/utils/getUser";
@@ -19,7 +19,13 @@ export default async function Page({
 }) {
 	const { user_metadata } = await getUser();
 
-	const { year, month, category, tab = 1 } = await searchParams;
+	const {
+		year,
+		month,
+		category,
+		tab = 1,
+		date = new Date(),
+	} = await searchParams;
 	let selectedYear, selectedMonth;
 
 	if (!year) {
@@ -38,6 +44,7 @@ export default async function Page({
 
 	const selectedCategory = category;
 	const selectedTab = Number(tab);
+	const selectedDate = format(new Date(date), "yyyy-MM-dd");
 
 	const { d, Categories, Years } = await getYearlyData(selectedYear);
 
@@ -94,6 +101,10 @@ export default async function Page({
 		};
 	});
 
+	const { Total, Transactions: dailyTransactions } = await getDaysData(
+		format(selectedDate, "yyyy-MM-dd"),
+	);
+
 	return (
 		<div className="flex h-screen min-h-[600px] flex-col-reverse md:flex-row">
 			<Sidebar />
@@ -104,8 +115,15 @@ export default async function Page({
 					selectedYear={selectedYear}
 					selectedCategory={selectedCategory}
 					selectedMonth={selectedMonth}
+					selectedDate={selectedDate}
 				/>
-				<Tabs tab={selectedTab} />
+				<Tabs
+					tab={selectedTab}
+					selectedYear={selectedYear}
+					selectedMonth={selectedMonth}
+					selectedCategory={selectedCategory}
+					selectedDate={selectedDate}
+				/>
 				<div className="grid h-[1px] flex-grow grid-cols-12 grid-rows-6 gap-2 overflow-hidden">
 					<div
 						className={` ${selectedTab === 1 ? "max-lg:col-span-full max-lg:md:col-span-7" : "max-lg:hidden"} bubble row-span-3 lg:col-span-5`}
@@ -119,6 +137,7 @@ export default async function Page({
 							selectedCategory={selectedCategory}
 							selectedMonth={selectedMonth}
 							selectedYear={selectedYear}
+							selectedDate={selectedDate}
 						/>
 					</div>
 					<div
@@ -129,12 +148,21 @@ export default async function Page({
 							selectedYear={selectedYear}
 							selectedCategory={selectedCategory}
 							monthlySummary={monthly}
+							selectedDate={selectedDate}
 						/>
 					</div>
 					<div
 						className={` ${selectedTab === 3 ? "max-lg:col-span-full" : "max-lg:hidden"} bubble row-span-6 lg:col-span-3`}
 					>
-						<Accounts />
+						<DayData
+							total={Total}
+							transactions={dailyTransactions}
+							selectedYear={selectedYear}
+							selectedMonth={selectedMonth}
+							selectedCategory={selectedCategory}
+							selectedTab={selectedTab}
+							selectedDate={selectedDate}
+						/>
 					</div>
 					<div
 						className={` ${selectedTab === 1 ? "max-lg:md:col-span-3" : "max-lg:md:hidden"} ${selectedTab === 2 ? "max-md:col-span-full" : "max-md:hidden"} bubble row-span-3 overflow-auto lg:col-span-2`}

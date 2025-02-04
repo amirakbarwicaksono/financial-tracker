@@ -14,6 +14,7 @@ interface BarGraphProps {
 	selectedMonth?: number;
 	selectedYear: number;
 	selectedCategory?: string;
+	selectedDate: string;
 	monthlySummary: {
 		month: string;
 		amount: number;
@@ -24,6 +25,7 @@ const BarGraph = ({
 	selectedMonth,
 	selectedYear,
 	selectedCategory,
+	selectedDate,
 	monthlySummary,
 }: BarGraphProps) => {
 	// console.log(`BarGraph rendered at: ${new Date().toLocaleTimeString()}`);
@@ -51,11 +53,11 @@ const BarGraph = ({
 					onClick={(_, index) => {
 						if (selectedMonth !== index) {
 							router.push(
-								`/home?year=${selectedYear}&month=${index + 1}${selectedCategory ? `&category=${selectedCategory}` : ""}`,
+								`/home?year=${selectedYear}&month=${index + 1}${selectedCategory ? `&category=${selectedCategory}` : ""}&date=${selectedDate}`,
 							);
 						} else {
 							router.push(
-								`/home?year=${selectedYear}${selectedCategory ? `&category=${selectedCategory}` : ""}`,
+								`/home?year=${selectedYear}${selectedCategory ? `&category=${selectedCategory}` : ""}&date=${selectedDate}`,
 							);
 						}
 					}}

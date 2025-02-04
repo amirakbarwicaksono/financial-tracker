@@ -37,6 +37,15 @@ export interface QueryResponse {
 	Years: number[];
 }
 
+export interface DaysDataQueryResponse {
+	Transactions: Transaction[];
+	Total: number;
+}
+
+export interface LastDateQueryResponse {
+	LastDate: string;
+}
+
 export interface CreateTransactionMutation {
 	createTransaction: {
 		id: string;
