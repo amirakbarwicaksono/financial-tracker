@@ -18,7 +18,7 @@ import (
 // Transactions is the resolver for the transactions field.
 func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
 	if obj.Transactions == nil {
-		fmt.Println("Category Transactions: ", time.Now().Format("15:04:05"))
+		// fmt.Println("Category Transactions: ", time.Now().Format("15:04:05"))
 
 		transactions := []*model.Transaction{}
 		query := r.DB.Where("category_id = ?", obj.ID)
@@ -39,7 +39,7 @@ func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category
 // Total is the resolver for the total field.
 func (r *categoryResolver) Total(ctx context.Context, obj *model.Category, rangeArg *model.RangeInput) (*float64, error) {
 	if obj.Total == nil {
-		fmt.Println("Category Total: ", time.Now().Format("15:04:05"))
+		// fmt.Println("Category Total: ", time.Now().Format("15:04:05"))
 
 		var total float64
 		query := r.DB.Model(&model.Transaction{}).Where("category_id = ?", obj.ID)
@@ -130,7 +130,7 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (*mode
 
 // Transactions is the resolver for the Transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Transaction, error) {
-	fmt.Println("Transactions: ", time.Now().Format("15:04:05"))
+	// fmt.Println("Transactions: ", time.Now().Format("15:04:05"))
 
 	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -189,7 +189,7 @@ func (r *queryResolver) Transaction(ctx context.Context, id int) (*model.Transac
 
 // TransactionsByMonth is the resolver for the TransactionsByMonth field.
 func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*model.MonthSummary, error) {
-	fmt.Println("TransactionsByMonth: ", time.Now().Format("15:04:05"))
+	// fmt.Println("TransactionsByMonth: ", time.Now().Format("15:04:05"))
 	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (r *queryResolver) TransactionsByMonth(ctx context.Context, year int) ([]*m
 
 // Categories is the resolver for the Categories field.
 func (r *queryResolver) Categories(ctx context.Context, rangeArg *model.RangeInput) ([]*model.Category, error) {
-	fmt.Println("Categories: ", time.Now().Format("15:04:05"))
+	// fmt.Println("Categories: ", time.Now().Format("15:04:05"))
 
 	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -427,7 +427,7 @@ func (r *queryResolver) Category(ctx context.Context, id int, rangeArg *model.Ra
 
 // Years is the resolver for the Years field.
 func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
-	fmt.Println("Years: ", time.Now().Format("15:04:05"))
+	// fmt.Println("Years: ", time.Now().Format("15:04:05"))
 
 	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -455,7 +455,7 @@ func (r *queryResolver) Years(ctx context.Context) ([]*int, error) {
 
 // LastDate is the resolver for the LastDate field.
 func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
-	fmt.Println("LastDate: ", time.Now().Format("15:04:05"))
+	// fmt.Println("LastDate: ", time.Now().Format("15:04:05"))
 
 	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -481,7 +481,7 @@ func (r *queryResolver) LastDate(ctx context.Context) (*string, error) {
 
 // Total is the resolver for the Total field.
 func (r *queryResolver) Total(ctx context.Context, rangeArg *model.RangeInput) (*float64, error) {
-	fmt.Println("Total: ", time.Now().Format("15:04:05"))
+	// fmt.Println("Total: ", time.Now().Format("15:04:05"))
 
 	userId, err := utils.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -506,7 +506,7 @@ func (r *queryResolver) Total(ctx context.Context, rangeArg *model.RangeInput) (
 // Category is the resolver for the category field.
 func (r *transactionResolver) Category(ctx context.Context, obj *model.Transaction) (*model.Category, error) {
 	if obj.Category == nil {
-		fmt.Println("Transactions Category: ", time.Now().Format("15:04:05"))
+		// fmt.Println("Transactions Category: ", time.Now().Format("15:04:05"))
 
 		category := &model.Category{}
 		if err := r.DB.First(&category, obj.CategoryID).Error; err != nil {

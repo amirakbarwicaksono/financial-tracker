@@ -24,7 +24,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	origin := "https://fintrack-1scr.onrender.com"
-	domain := ""
+	domain := "0.0.0.0"
 	if port == "" {
 		port = defaultPort
 		domain = "localhost"
