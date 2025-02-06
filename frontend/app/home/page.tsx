@@ -46,10 +46,11 @@ export default async function Page({
 	const selectedTab = Number(tab);
 	const selectedDate = format(new Date(date), "yyyy-MM-dd");
 
-	const { d, Categories, Years } = await getYearlyData(selectedYear);
+	const { TransactionsByMonth, Categories, Years } =
+		await getYearlyData(selectedYear);
 
 	const selectedCategoryId = Categories.find(
-		(cat) => cat.name === selectedCategory,
+		(category) => category.name === selectedCategory,
 	)?.id;
 
 	const categoryTotals = Categories.map((category) => {
@@ -57,7 +58,7 @@ export default async function Page({
 			category: category.name,
 			amount:
 				selectedMonth !== undefined
-					? (d[selectedMonth].categories.find(
+					? (TransactionsByMonth[selectedMonth].categories.find(
 							(cat) => cat.name === category.name,
 						)?.total ?? 0)
 					: (category.total ?? 0),
@@ -67,36 +68,42 @@ export default async function Page({
 
 	const total =
 		selectedMonth !== undefined && selectedCategory
-			? d[selectedMonth].categories.find((cat) => cat.name === selectedCategory)
-					?.total
+			? TransactionsByMonth[selectedMonth].categories.find(
+					(category) => category.name === selectedCategory,
+				)?.total
 			: selectedMonth !== undefined
-				? d[selectedMonth].total
+				? TransactionsByMonth[selectedMonth].total
 				: selectedCategory
-					? Categories.find((cat) => cat.name === selectedCategory)?.total
-					: d.reduce((acc, month) => acc + month.total, 0);
+					? Categories.find((category) => category.name === selectedCategory)
+							?.total
+					: TransactionsByMonth.reduce((acc, month) => acc + month.total, 0);
 
 	const transactions =
 		selectedMonth !== undefined && selectedCategory
-			? (d[selectedMonth].categories.find(
-					(cat) => cat.name === selectedCategory,
+			? (TransactionsByMonth[selectedMonth].categories.find(
+					(category) => category.name === selectedCategory,
 				)?.transactions ?? [])
 			: selectedMonth !== undefined
-				? d[selectedMonth].categories.flatMap((cat) => cat.transactions)
+				? TransactionsByMonth[selectedMonth].categories.flatMap(
+						(category) => category.transactions,
+					)
 				: selectedCategory
-					? d.flatMap(
+					? TransactionsByMonth.flatMap(
 							(month) =>
-								month.categories.find((cat) => cat.name === selectedCategory)
-									?.transactions ?? [],
+								month.categories.find(
+									(category) => category.name === selectedCategory,
+								)?.transactions ?? [],
 						)
-					: d.flatMap((month) =>
-							month.categories.flatMap((cat) => cat.transactions),
+					: TransactionsByMonth.flatMap((month) =>
+							month.categories.flatMap((category) => category.transactions),
 						);
-	const monthly = d.map((month, index) => {
+	const monthly = TransactionsByMonth.map((month, index) => {
 		return {
 			month: format(new Date(1990, index, 1), "MMMM"),
 			amount: selectedCategory
-				? (month.categories.find((cat) => cat.name === selectedCategory)
-						?.total ?? 0)
+				? (month.categories.find(
+						(category) => category.name === selectedCategory,
+					)?.total ?? 0)
 				: month.total,
 		};
 	});
@@ -105,63 +112,49 @@ export default async function Page({
 		format(selectedDate, "yyyy-MM-dd"),
 	);
 
+	const urlParams = {
+		selectedYear,
+		selectedMonth,
+		selectedCategory,
+		selectedTab,
+		selectedDate,
+	};
+
 	return (
 		<div className="flex h-screen min-h-[600px] flex-col-reverse md:flex-row">
 			<Sidebar />
 			<div className="flex w-full flex-grow flex-col gap-2 p-2">
 				<Navbar
+					{...urlParams}
 					userData={user_metadata as UserMetadata}
 					data={Years}
-					selectedYear={selectedYear}
-					selectedCategory={selectedCategory}
-					selectedMonth={selectedMonth}
-					selectedDate={selectedDate}
 				/>
-				<Tabs
-					tab={selectedTab}
-					selectedYear={selectedYear}
-					selectedMonth={selectedMonth}
-					selectedCategory={selectedCategory}
-					selectedDate={selectedDate}
-				/>
+				<Tabs {...urlParams} />
 				<div className="grid h-[1px] flex-grow grid-cols-12 grid-rows-6 gap-2 overflow-hidden">
 					<div
 						className={` ${selectedTab === 1 ? "max-lg:col-span-full max-lg:md:col-span-7" : "max-lg:hidden"} bubble row-span-3 lg:col-span-5`}
 					>
 						<PieGraph
+							{...urlParams}
 							data={categoryTotals}
 							total={total}
 							activeIndex={
 								selectedCategoryId ? Number(selectedCategoryId) - 1 : -1
 							}
-							selectedCategory={selectedCategory}
-							selectedMonth={selectedMonth}
-							selectedYear={selectedYear}
-							selectedDate={selectedDate}
 						/>
 					</div>
 					<div
 						className={` ${selectedTab === 1 ? "max-lg:col-span-full max-lg:md:col-span-5" : "max-lg:hidden"} bubble row-span-3 lg:col-span-4`}
 					>
-						<BarGraph
-							selectedMonth={selectedMonth}
-							selectedYear={selectedYear}
-							selectedCategory={selectedCategory}
-							monthlySummary={monthly}
-							selectedDate={selectedDate}
-						/>
+						<BarGraph {...urlParams} monthlySummary={monthly} />
 					</div>
 					<div
 						className={` ${selectedTab === 3 ? "max-lg:col-span-full" : "max-lg:hidden"} bubble row-span-6 lg:col-span-3`}
 					>
 						<DayData
+							{...urlParams}
 							total={Total}
 							transactions={dailyTransactions}
-							selectedYear={selectedYear}
-							selectedMonth={selectedMonth}
-							selectedCategory={selectedCategory}
-							selectedTab={selectedTab}
-							selectedDate={selectedDate}
 						/>
 					</div>
 					<div

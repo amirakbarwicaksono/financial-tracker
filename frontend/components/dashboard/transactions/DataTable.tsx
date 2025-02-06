@@ -29,6 +29,8 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Category, Transaction } from "@/types/types";
+import { capitalize } from "@/utils/capitalize";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { format } from "date-fns";
 import { useState } from "react";
 
@@ -84,17 +86,7 @@ export function DataTable<TData>({
 			header: "Item",
 			cell: ({ row }) => {
 				const item = row.getValue("item") as string;
-				return (
-					<div>
-						{item
-							.split(" ")
-							.map(
-								(word) =>
-									word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-							)
-							.join(" ")}
-					</div>
-				);
+				return <div>{capitalize(item)}</div>;
 			},
 		},
 		{
@@ -112,12 +104,7 @@ export function DataTable<TData>({
 			),
 			cell: ({ row }) => {
 				const amount = parseFloat(row.getValue("amount"));
-				const formatted = new Intl.NumberFormat("en-IN", {
-					style: "currency",
-					currency: "INR",
-				}).format(amount);
-
-				return <div>{formatted}</div>;
+				return <div>{formatCurrency(amount)}</div>;
 			},
 		},
 		{

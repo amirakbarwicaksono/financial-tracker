@@ -6,15 +6,13 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
+import { UrlProps } from "@/types/types";
+import { buildUrl } from "@/utils/buildUrl";
 import { cn } from "@/utils/conditional";
 import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from "recharts";
 
 interface BarGraphProps {
-	selectedMonth?: number;
-	selectedYear: number;
-	selectedCategory?: string;
-	selectedDate: string;
 	monthlySummary: {
 		month: string;
 		amount: number;
@@ -27,7 +25,7 @@ const BarGraph = ({
 	selectedCategory,
 	selectedDate,
 	monthlySummary,
-}: BarGraphProps) => {
+}: BarGraphProps & UrlProps) => {
 	// console.log(`BarGraph rendered at: ${new Date().toLocaleTimeString()}`);
 	const router = useRouter();
 
@@ -51,15 +49,14 @@ const BarGraph = ({
 				/>
 				<Bar
 					onClick={(_, index) => {
-						if (selectedMonth !== index) {
-							router.push(
-								`/home?year=${selectedYear}&month=${index + 1}${selectedCategory ? `&category=${selectedCategory}` : ""}&date=${selectedDate}`,
-							);
-						} else {
-							router.push(
-								`/home?year=${selectedYear}${selectedCategory ? `&category=${selectedCategory}` : ""}&date=${selectedDate}`,
-							);
-						}
+						selectedMonth = selectedMonth !== index ? index : undefined;
+						const url = buildUrl({
+							selectedYear,
+							selectedMonth,
+							selectedCategory,
+							selectedDate,
+						});
+						router.push(url);
 					}}
 					activeIndex={selectedMonth}
 					className="hover:cursor-pointer"

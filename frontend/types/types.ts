@@ -3,8 +3,12 @@ export interface RangeInput {
 	endDate: string;
 }
 
-export interface QueryVariables {
+export interface YearlyDataQueryVariables {
 	year: number;
+	range: RangeInput;
+}
+
+export interface DaysDataQueryVariables {
 	range: RangeInput;
 }
 
@@ -31,7 +35,7 @@ export interface MonthSummary {
 	total: number;
 }
 
-export interface QueryResponse {
+export interface YearlsDataQueryResponse {
 	TransactionsByMonth: MonthSummary[];
 	Categories: Category[];
 	Years: number[];
@@ -44,6 +48,10 @@ export interface DaysDataQueryResponse {
 
 export interface LastDateQueryResponse {
 	LastDate: string;
+}
+
+export interface YearsQueryResponse {
+	Years: number[];
 }
 
 export interface CreateTransactionMutation {
@@ -69,32 +77,31 @@ export interface CreateTransactionVariables {
 	};
 }
 
+export interface CreateTransactionResponse {
+	createTransaction: Transaction;
+}
+
 export interface DeleteTransactionVariables {
 	id: number;
 }
 
-export interface UpdateTransactionInput {
-	item: string;
-	categoryID: string;
-	isIncome?: boolean;
-	date: string;
-	amount: number;
-}
-
-export interface UpdateTransactionResponse {
-	id: string;
-	item: string;
-	category: {
-		id: string;
-		name: string;
-	};
-	amount: number;
-	date: string;
+export interface DeleteTransactionResponse {
+	deleteTransaction: Transaction;
 }
 
 export interface UpdateTransactionVariables {
 	id: number;
-	input: UpdateTransactionInput;
+	input: {
+		item: string;
+		categoryID: string;
+		isIncome?: boolean;
+		date: string;
+		amount: number;
+	};
+}
+
+export interface UpdateTransactionResponse {
+	updateTransaction: Transaction;
 }
 
 export interface CategoriesQueryResponse {
@@ -112,4 +119,12 @@ export interface UserMetadata {
 	picture: string;
 	provider_id: string;
 	sub: string;
+}
+
+export interface UrlProps {
+	selectedYear: number;
+	selectedMonth: number | undefined;
+	selectedCategory: string | undefined;
+	selectedTab?: number;
+	selectedDate: string;
 }

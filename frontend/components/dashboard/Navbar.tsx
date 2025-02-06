@@ -7,17 +7,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { UserMetadata } from "@/types/types";
+import { UrlProps, UserMetadata } from "@/types/types";
+import { buildUrl } from "@/utils/buildUrl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 interface NavbarProps {
 	userData?: UserMetadata;
 	data: number[];
-	selectedYear: number;
-	selectedCategory: string | undefined;
-	selectedMonth: number | undefined;
-	selectedDate: string;
 }
 
 const Navbar = ({
@@ -27,7 +24,8 @@ const Navbar = ({
 	selectedCategory,
 	selectedMonth,
 	selectedDate,
-}: NavbarProps) => {
+	selectedTab,
+}: NavbarProps & UrlProps) => {
 	const router = useRouter();
 	// console.log(`Navbar rendered at: ${new Date().toLocaleTimeString()}`);
 	return (
@@ -36,11 +34,17 @@ const Navbar = ({
 				{/* <p className="w-1/3">LOGO</p> */}
 
 				<Select
-					onValueChange={(value) =>
-						router.push(
-							`/home?year=${value}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}${selectedCategory ? `&category=${selectedCategory}` : ""}&date=${selectedDate}`,
-						)
-					}
+					onValueChange={(value) => {
+						selectedYear = Number(value);
+						const url = buildUrl({
+							selectedYear,
+							selectedMonth,
+							selectedCategory,
+							selectedTab,
+							selectedDate,
+						});
+						router.push(url);
+					}}
 					value={selectedYear.toString()}
 				>
 					<SelectTrigger className="w-24">

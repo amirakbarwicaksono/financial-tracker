@@ -7,6 +7,8 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
+import { UrlProps } from "@/types/types";
+import { buildUrl } from "@/utils/buildUrl";
 import { useRouter } from "next/navigation";
 import { Label, Legend, Pie, PieChart, Sector } from "recharts";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";
@@ -21,10 +23,6 @@ interface PieGraphProps {
 	data: DataType[];
 	total?: number;
 	activeIndex: number;
-	selectedCategory?: string;
-	selectedMonth?: number;
-	selectedYear: number;
-	selectedDate: string;
 }
 
 const PieGraph = ({
@@ -35,7 +33,7 @@ const PieGraph = ({
 	selectedMonth,
 	selectedYear,
 	selectedDate,
-}: PieGraphProps) => {
+}: PieGraphProps & UrlProps) => {
 	// console.log(`PieGraph rendered at: ${new Date().toLocaleTimeString()}`);
 	const COLORS = [
 		"#e6194B",
@@ -94,15 +92,15 @@ const PieGraph = ({
 				<Pie
 					onClick={(_, index) => {
 						const categoryID = data[index]?.category;
-						if (selectedCategory !== categoryID) {
-							router.push(
-								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&category=${categoryID}&date=${selectedDate}`,
-							);
-						} else {
-							router.push(
-								`/home?year=${selectedYear}${selectedMonth !== undefined ? `&month=${selectedMonth + 1}` : ""}&date=${selectedDate}`,
-							);
-						}
+						selectedCategory =
+							selectedCategory !== categoryID ? categoryID : undefined;
+						const url = buildUrl({
+							selectedYear,
+							selectedMonth,
+							selectedCategory,
+							selectedDate,
+						});
+						router.push(url);
 					}}
 					className="hover:cursor-pointer"
 					activeIndex={activeIndex}
