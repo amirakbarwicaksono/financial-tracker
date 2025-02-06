@@ -3,11 +3,9 @@
 Finance Tracker is a simple tool to help you manage your personal finances.
 
    
+![localhost_3000_home_year=2023 month=2 date=2025-02-07 (2)](https://github.com/user-attachments/assets/a1ccbcb8-b60b-4bb4-b316-2611772a84fe)
 
-![2024-04-03 (1)](https://github.com/aashish47/finance-tracker/assets/134308022/e782d394-2ee1-4bba-95e9-e41137817d7f)
-![2024-04-03 (2)](https://github.com/aashish47/finance-tracker/assets/134308022/d91cd0ef-58e1-4bc9-91fd-de794af8e78d)
-![2024-04-03 (3)](https://github.com/aashish47/finance-tracker/assets/134308022/bf7eb2a8-41fa-422a-b698-35bac04bd36d)
-![2024-04-03 (4)](https://github.com/aashish47/finance-tracker/assets/134308022/701051de-11ed-4ce9-ad1c-e71a704744eb)
+
 
 
 
