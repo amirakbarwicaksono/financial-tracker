@@ -7,6 +7,10 @@ import getLastDateQuery from "@/graphql/getLastDate.graphql";
 import getYearlyDataQuery from "@/graphql/getYearlyData.graphql";
 import updateTransactionMutation from "@/graphql/updateTransaction.graphql";
 import { request } from "@/lib/request";
+import { Provider } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
 import {
 	CreateTransactionVariables,
 	DaysDataQueryResponse,
@@ -21,6 +25,7 @@ import {
 } from "@/types/types";
 import { getRange } from "@/utils/getRange";
 import { getUser } from "@/utils/getUser";
+import { createClient } from "@/utils/supabase/server";
 import { format } from "date-fns";
 import { revalidateTag } from "next/cache";
 
@@ -114,4 +119,61 @@ export const deleteTransaction = async (
 	revalidateTag(`${id}-${format(date, "yyyy-MM-dd")}`);
 
 	return { error: null };
+};
+
+export const login = async (formData: FormData) => {
+	const supabase = await createClient();
+
+	// type-casting here for convenience
+	// in practice, you should validate your inputs
+	const data = {
+		email: formData.get("email") as string,
+		password: formData.get("password") as string,
+	};
+
+	const { error } = await supabase.auth.signInWithPassword(data);
+
+	if (error) {
+		redirect("/error");
+	}
+
+	revalidatePath("/", "layout");
+	redirect("/");
+};
+
+export const signup = async (formData: FormData) => {
+	const supabase = await createClient();
+
+	// type-casting here for convenience
+	// in practice, you should validate your inputs
+	const data = {
+		email: formData.get("email") as string,
+		password: formData.get("password") as string,
+	};
+
+	const { error } = await supabase.auth.signUp(data);
+
+	if (error) {
+		redirect("/error");
+	}
+
+	revalidatePath("/", "layout");
+	redirect("/");
+};
+
+export const oauth = async (provider: Provider) => {
+	const supabase = await createClient();
+	const { data, error } = await supabase.auth.signInWithOAuth({
+		provider,
+		options: {
+			redirectTo: `${process.env.NEXT_PUBLIC_REDIRECT_URL}/auth/callback/`,
+		},
+	});
+
+	if (data.url) {
+		redirect(data.url);
+	}
+	if (error) {
+		redirect("/error");
+	}
 };
