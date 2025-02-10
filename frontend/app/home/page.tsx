@@ -44,7 +44,7 @@ export default async function Page({
 
 	const selectedCategory = category;
 	const selectedTab = Number(tab);
-	const selectedDate = format(new Date(date), "yyyy-MM-dd");
+	const selectedDate = date.toString();
 
 	const { TransactionsByMonth, Categories, Years } =
 		await getYearlyData(selectedYear);
@@ -108,9 +108,8 @@ export default async function Page({
 		};
 	});
 
-	const { Total, Transactions: dailyTransactions } = await getDaysData(
-		format(selectedDate, "yyyy-MM-dd"),
-	);
+	const { Total: dailyTotal, Transactions: dailyTransactions } =
+		await getDaysData(format(selectedDate, "yyyy-MM-dd"));
 
 	const urlParams = {
 		selectedYear,
@@ -153,7 +152,7 @@ export default async function Page({
 					>
 						<DayData
 							{...urlParams}
-							total={Total}
+							total={dailyTotal}
 							transactions={dailyTransactions}
 						/>
 					</div>

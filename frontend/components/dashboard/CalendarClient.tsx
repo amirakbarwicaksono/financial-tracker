@@ -14,6 +14,7 @@ const CalendarClient = ({
 	selectedDate,
 }: UrlProps) => {
 	const router = useRouter();
+	console.log(selectedDate);
 	return (
 		<Calendar
 			id="calendar"

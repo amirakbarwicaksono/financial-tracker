@@ -1,4 +1,5 @@
 import { UrlProps } from "@/types/types";
+import { format } from "date-fns";
 
 export const buildUrl = ({
 	selectedYear,
@@ -23,7 +24,7 @@ export const buildUrl = ({
 	}
 
 	if (selectedDate) {
-		params.set("date", selectedDate);
+		params.set("date", format(new Date(selectedDate), "yyyy-MM-dd"));
 	}
 
 	const url = `/home?${params.toString()}`;
