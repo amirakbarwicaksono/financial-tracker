@@ -2,6 +2,10 @@
 
 Finance Tracker is a simple tool to help you manage your personal finances.
 
+
+https://github.com/user-attachments/assets/139153aa-8511-401e-ae97-e2d46a3457fd
+
+
    
 ![localhost_3000_home_year=2023 month=2 date=2025-02-07 (2)](https://github.com/user-attachments/assets/a1ccbcb8-b60b-4bb4-b316-2611772a84fe)
 
