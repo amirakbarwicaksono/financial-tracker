@@ -1,6 +1,6 @@
 DO $$
 DECLARE
-    user_id TEXT := 'replace with your id/sub provided in session object';
+    user_id UUID := '37f99b64-a08a-421f-bec6-8fc7c875300f';
 BEGIN
     INSERT INTO transactions (item, amount, date, is_income, category_id, user_id)
     VALUES 
